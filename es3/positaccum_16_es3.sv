@@ -5,7 +5,7 @@
 `timescale 1ns / 1ps
 `default_nettype wire
 
-`include "posit_defines_es3.sv"
+// `include "posit_defines_es3.sv"
 import posit_defines_es3::*;
 
 module positaccum_16_es3 (clk, rst, in1, start, result, inf, zero, done);

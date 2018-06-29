@@ -5,7 +5,7 @@
 `timescale 1ns / 1ps
 `default_nettype wire
 
-`include "posit_defines_es3.sv"
+// `include "posit_defines_es3.sv"
 import posit_defines_es3::*;
 
 module posit_extract_es3 (input wire [NBITS-1:0] in, output wire [NBITS-2:0] abs, output value out);

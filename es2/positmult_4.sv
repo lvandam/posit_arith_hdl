@@ -5,7 +5,7 @@
 `timescale 1ns / 1ps
 `default_nettype wire
 
-`include "posit_defines.sv"
+// `include "posit_defines.sv"
 import posit_defines::*;
 
 module positmult_4 (clk, in1, in2, start, result, inf, zero, done);

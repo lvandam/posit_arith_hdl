@@ -5,7 +5,7 @@
 `timescale 1ns / 1ps
 `default_nettype wire
 
-`include "posit_defines.sv"
+// `include "posit_defines.sv"
 import posit_defines::*;
 
 module positaccum_16 (clk, rst, in1, start, result, inf, zero, done);

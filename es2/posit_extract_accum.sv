@@ -5,7 +5,7 @@
 `timescale 1ns / 1ps
 `default_nettype wire
 
-`include "posit_defines.sv"
+// `include "posit_defines.sv"
 import posit_defines::*;
 
 module posit_extract_accum (input wire [NBITS-1:0] in, output wire [NBITS-2:0] abs, output value_accum out);

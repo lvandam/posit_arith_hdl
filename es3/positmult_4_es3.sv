@@ -79,7 +79,7 @@ module positmult_4_es3 (clk, in1, in2, start, result, inf, zero, done);
     assign r1_result_fraction = r1_fraction_mult[MBITS-1] ? (r1_fraction_mult << 1) : (r1_fraction_mult << 2); // Shift hidden bit out
 
     assign r1_product.fraction = r1_result_fraction[MBITS-1:0];
-    assign r1_product.sign = r1_a.sign ^ r1_b.sign;
+    assign r1_product.sgn = r1_a.sgn ^ r1_b.sgn;
     assign r1_product.zero = r1_a.zero | r1_b.zero;
     assign r1_product.inf = r1_a.inf | r1_b.inf;
 
@@ -200,10 +200,10 @@ module positmult_4_es3 (clk, in1, in2, start, result, inf, zero, done);
 
     // In case the product is negative, take 2's complement of everything but the sign
     logic [NBITS-2:0] r3_signed_result_no_sign;
-    assign r3_signed_result_no_sign = r3_product.sign ? -r3_result_no_sign_rounded[NBITS-2:0] : r3_result_no_sign_rounded[NBITS-2:0];
+    assign r3_signed_result_no_sign = r3_product.sgn ? -r3_result_no_sign_rounded[NBITS-2:0] : r3_result_no_sign_rounded[NBITS-2:0];
 
     // Final output
-    assign result = (r3_product.zero | r3_product.inf) ? {r3_product.inf, {NBITS-1{1'b0}}} : {r3_product.sign, r3_signed_result_no_sign[NBITS-2:0]};
+    assign result = (r3_product.zero | r3_product.inf) ? {r3_product.inf, {NBITS-1{1'b0}}} : {r3_product.sgn, r3_signed_result_no_sign[NBITS-2:0]};
     assign inf = r3_product.inf;
     assign zero = ~r3_product.inf & r3_product.zero;
     assign done = r3_start;

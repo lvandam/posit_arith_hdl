@@ -8,7 +8,12 @@
 // `include "posit_defines_es3.sv"
 import posit_defines_es3::*;
 
-module posit_extract_es3 (input wire [NBITS-1:0] in1, output wire [NBITS-2:0] absolute, output value result);
+module posit_extract_raw_es3 (in1, absolute, result);
+
+    input wire [31:0] in1;
+    output wire [30:0] absolute;
+    output wire [POSIT_SERIALIZED_WIDTH_ES3-1:0] result;
+
     logic [8:0] regime_scale;
     logic [4:0] regime_u, k0, k1;
     logic [NBITS-1:0] exp_fraction_u;
@@ -19,14 +24,16 @@ module posit_extract_es3 (input wire [NBITS-1:0] in1, output wire [NBITS-2:0] ab
     logic posit_nonzero_without_sign;
     assign posit_nonzero_without_sign = |in1[NBITS-2:0];
 
-    // Special case handling (inf, zero) for both inputs
-    assign result.zero = ~(in1[NBITS-1] | posit_nonzero_without_sign);
-    assign result.inf = in1[NBITS-1] & (~posit_nonzero_without_sign);
+    value result_val;
 
-    assign result.sgn = in1[NBITS-1];
+    // Special case handling (inf, zero) for both inputs
+    assign result_val.zero = ~(in1[NBITS-1] | posit_nonzero_without_sign);
+    assign result_val.inf = in1[NBITS-1] & (~posit_nonzero_without_sign);
+
+    assign result_val.sgn = in1[NBITS-1];
 
     // Unsigned input (*_u = unsigned)
-    assign in_u = result.sgn ? -in1 : in1;
+    assign in_u = result_val.sgn ? -in1 : in1;
 
     // Leading-One detection for regime
     LOD_N #(
@@ -61,11 +68,13 @@ module posit_extract_es3 (input wire [NBITS-1:0] in1, output wire [NBITS-2:0] ab
         .c(exp_fraction_u)
     );
 
-    assign result.fraction = exp_fraction_u[NBITS-ES-1:3];
+    assign result_val.fraction = exp_fraction_u[NBITS-ES-1:3];
 
     // Scale = k*(2^es) + 2^exp
-    assign result.scale = regime_scale + exp_fraction_u[NBITS-1:NBITS-ES];
+    assign result_val.scale = regime_scale + exp_fraction_u[NBITS-1:NBITS-ES];
 
     assign absolute = in_u[NBITS-2:0];
+
+    assign result = serialize(result_val);
 
 endmodule

@@ -37,7 +37,7 @@ module positaccum_16_es3 (clk, rst, in1, start, result, inf, zero, done);
 
         if (rst || out_accum.scale === 'x)
         begin
-            r0_accum.sign = '0;
+            r0_accum.sgn = '0;
             r0_accum.scale = '0;
             r0_accum.fraction = '0;
             r0_accum.inf = '0;
@@ -61,7 +61,7 @@ module positaccum_16_es3 (clk, rst, in1, start, result, inf, zero, done);
     logic r0_a_lt_b; // A larger than B
     assign r0_a_lt_b = r0_a.scale >= r0_accum.scale ? '1 : '0;
 
-    assign r0_operation = r0_a.sign ~^ r0_accum.sign; // 1 = equal signs = add, 0 = unequal signs = subtract
+    assign r0_operation = r0_a.sgn ~^ r0_accum.sgn; // 1 = equal signs = add, 0 = unequal signs = subtract
     assign r0_low = r0_a_lt_b ? r0_accum : r0_a;
     assign r0_hi = r0_a_lt_b ? r0_a : r0_accum;
 
@@ -86,13 +86,13 @@ module positaccum_16_es3 (clk, rst, in1, start, result, inf, zero, done);
 
             r1_operation <= '0;
 
-            r1_hi.sign = '0;
+            r1_hi.sgn = '0;
             r1_hi.scale = '0;
             r1_hi.fraction = '0;
             r1_hi.inf = '0;
             r1_hi.zero = '1;
 
-            r1_low.sign = '0;
+            r1_low.sgn = '0;
             r1_low.scale = '0;
             r1_low.fraction = '0;
             r1_low.inf = '0;
@@ -148,13 +148,13 @@ module positaccum_16_es3 (clk, rst, in1, start, result, inf, zero, done);
 
             r1a_operation <= '0;
 
-            r1a_hi.sign = '0;
+            r1a_hi.sgn = '0;
             r1a_hi.scale = '0;
             r1a_hi.fraction = '0;
             r1a_hi.inf = '0;
             r1a_hi.zero = '1;
 
-            r1a_low.sign = '0;
+            r1a_low.sgn = '0;
             r1a_low.scale = '0;
             r1a_low.fraction = '0;
             r1a_low.inf = '0;
@@ -211,13 +211,13 @@ module positaccum_16_es3 (clk, rst, in1, start, result, inf, zero, done);
             begin
                 r1b_startShiftReg[i] <= '0;
 
-                r1b_hiShiftReg[i].sign = '0;
+                r1b_hiShiftReg[i].sgn = '0;
                 r1b_hiShiftReg[i].scale = '0;
                 r1b_hiShiftReg[i].fraction = '0;
                 r1b_hiShiftReg[i].inf = '0;
                 r1b_hiShiftReg[i].zero = '1;
 
-                r1b_lowShiftReg[i].sign = '0;
+                r1b_lowShiftReg[i].sgn = '0;
                 r1b_lowShiftReg[i].scale = '0;
                 r1b_lowShiftReg[i].fraction = '0;
                 r1b_lowShiftReg[i].inf = '0;
@@ -264,7 +264,7 @@ module positaccum_16_es3 (clk, rst, in1, start, result, inf, zero, done);
     logic signed [8:0] r1b_scale_sum;
     assign r1b_scale_sum = r1b_fraction_sum_raw[ABITS_ACCUM] ? (r1b_hi.scale + 1) : ((~r1b_fraction_sum_raw[ABITS_ACCUM-1] & ~(r1b_hi.zero & r1b_low.zero)) ? (r1b_hi.scale - r1b_hidden_pos + 1) : r1b_hi.scale);
 
-    assign r1b_sum.sign = r1b_hi.sign;
+    assign r1b_sum.sgn = r1b_hi.sgn;
     assign r1b_sum.scale = r1b_scale_sum;
     assign r1b_sum.zero = r1b_hi.zero & r1b_low.zero;
     assign r1b_sum.inf = r1b_hi.inf | r1b_low.inf;
@@ -294,7 +294,7 @@ module positaccum_16_es3 (clk, rst, in1, start, result, inf, zero, done);
         begin
             r2_start <= '0;
 
-            r2_sum.sign = '0;
+            r2_sum.sgn = '0;
             r2_sum.scale = '0;
             r2_sum.inf = '0;
             r2_sum.zero = '1;
@@ -308,7 +308,7 @@ module positaccum_16_es3 (clk, rst, in1, start, result, inf, zero, done);
         begin
             r2_start <= r1b_start;
 
-            r2_sum.sign <= r1b_sum.sign;
+            r2_sum.sgn <= r1b_sum.sgn;
             r2_sum.scale <= r1b_sum.scale;
             r2_sum.inf <= r1b_sum.inf;
             r2_sum.zero <= r1b_sum.zero;
@@ -366,7 +366,7 @@ module positaccum_16_es3 (clk, rst, in1, start, result, inf, zero, done);
         begin
             r2b_start <= '0;
 
-            r2b_sum.sign = '0;
+            r2b_sum.sgn = '0;
             r2b_sum.scale = '0;
             r2b_sum.fraction = '0;
             r2b_sum.inf = '0;
@@ -439,7 +439,7 @@ module positaccum_16_es3 (clk, rst, in1, start, result, inf, zero, done);
         begin
             r3_start <= '0;
 
-            r3_sum.sign = '0;
+            r3_sum.sgn = '0;
             r3_sum.scale = '0;
             r3_sum.fraction = '0;
             r3_sum.inf = '0;
@@ -498,7 +498,7 @@ module positaccum_16_es3 (clk, rst, in1, start, result, inf, zero, done);
         begin
             r3b_start <= '0;
 
-            r3b_sum.sign = '0;
+            r3b_sum.sgn = '0;
             r3b_sum.scale = '0;
             r3b_sum.fraction = '0;
             r3b_sum.inf = '0;
@@ -533,7 +533,7 @@ module positaccum_16_es3 (clk, rst, in1, start, result, inf, zero, done);
 
     // In case the product is negative, take 2's complement of everything but the sign
     logic [NBITS-2:0] r3b_signed_result_no_sign;
-    assign r3b_signed_result_no_sign = r3b_sum.sign ? -r3b_result_no_sign_rounded[NBITS-2:0] : r3b_result_no_sign_rounded[NBITS-2:0];
+    assign r3b_signed_result_no_sign = r3b_sum.sgn ? -r3b_result_no_sign_rounded[NBITS-2:0] : r3b_result_no_sign_rounded[NBITS-2:0];
 
 
     //   ___     ___
@@ -556,7 +556,7 @@ module positaccum_16_es3 (clk, rst, in1, start, result, inf, zero, done);
 
             r99_out_rounded_zero <= '0;
 
-            r99_sum.sign = '0;
+            r99_sum.sgn = '0;
             r99_sum.scale = '0;
             r99_sum.fraction = '0;
             r99_sum.inf = '0;
@@ -584,7 +584,7 @@ module positaccum_16_es3 (clk, rst, in1, start, result, inf, zero, done);
 
     // Final output
     assign out_accum = r99_sum;
-    assign result = (r99_out_rounded_zero | r99_sum.zero | r99_sum.inf) ? {r99_sum.inf, {NBITS-1{1'b0}}} : {r99_sum.sign, r99_signed_result_no_sign[NBITS-2:0]};
+    assign result = (r99_out_rounded_zero | r99_sum.zero | r99_sum.inf) ? {r99_sum.inf, {NBITS-1{1'b0}}} : {r99_sum.sgn, r99_signed_result_no_sign[NBITS-2:0]};
     assign inf = r99_sum.inf;
     assign zero = ~r99_sum.inf & r99_sum.zero;
     assign done = r99_start;

@@ -159,7 +159,7 @@ module positadd_4_raw_es3 (clk, in1, in2, start, result, done);
         r2_low <= r1_low;
         r2_fraction_sum_raw <= r1_fraction_sum_raw;
         r2_truncated_after_equalizing <= r1_truncated_after_equalizing;
-
+        r2_hidden_pos <= r1_hidden_pos;
         r2_scale_sum <= r1_scale_sum;
     end
 
@@ -297,6 +297,6 @@ module positadd_4_raw_es3 (clk, in1, in2, start, result, done);
     assign result_sum.fraction = r3_sum.fraction;
     assign result_sum.scale = r3_sum.scale;
 
-    assign result = result_sum.sgn & result_sum.scale & result_sum.fraction & result_sum.inf & result_sum.zero;//serialize_sum(result_sum);
+    assign result = {result_sum.sgn, result_sum.scale, result_sum.fraction, result_sum.inf, result_sum.zero};//serialize_sum(result_sum);
 
 endmodule

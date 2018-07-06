@@ -391,6 +391,6 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done);
     assign result_sum.scale = r99_sum.scale;
 
     // assign result = serialize_sum(result_sum);
-    assign result = result_sum.sgn & result_sum.scale & result_sum.fraction & result_sum.inf & result_sum.zero;
+    assign result = {result_sum.sgn, result_sum.scale, result_sum.fraction, result_sum.inf, result_sum.zero};
 
 endmodule

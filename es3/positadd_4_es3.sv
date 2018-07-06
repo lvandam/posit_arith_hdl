@@ -147,7 +147,7 @@ module positadd_4_es3 (clk, in1, in2, start, result, inf, zero, done);
         r2_low <= r1_low;
         r2_fraction_sum_raw <= r1_fraction_sum_raw;
         r2_truncated_after_equalizing <= r1_truncated_after_equalizing;
-
+        r2_hidden_pos <= r1_hidden_pos;
         r2_scale_sum <= r1_scale_sum;
     end
 

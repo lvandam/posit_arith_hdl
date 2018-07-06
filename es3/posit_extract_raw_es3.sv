@@ -75,6 +75,6 @@ module posit_extract_raw_es3 (in1, absolute, result);
 
     assign absolute = in_u[NBITS-2:0];
 
-    assign result = result_val.sgn & result_val.scale & result_val.fraction & result_val.inf & result_val.zero; //serialize(result_val);
+    assign result = {result_val.sgn, result_val.scale, result_val.fraction, result_val.inf, result_val.zero}; //serialize(result_val);
 
 endmodule

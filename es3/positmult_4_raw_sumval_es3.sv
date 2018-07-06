@@ -238,6 +238,6 @@ module positmult_4_raw_sumval_es3 (clk, in1, in2, start, result, done);
     assign result_product.scale = r3_product.scale;
 
     // assign result = serialize_prod(result_product);
-    assign result = result_product.sgn & result_product.scale & result_product.fraction & result_product.inf & result_product.zero;
+    assign result = {result_product.sgn, result_product.scale, result_product.fraction, result_product.inf, result_product.zero};
 
 endmodule

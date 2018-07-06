@@ -30,15 +30,26 @@ module positmult_4_raw_sumval_es3 (clk, in1, in2, start, result, done);
 
     always @(posedge clk)
     begin
-        r0_a <= deserialize_sum(in1);//(in1 === 'x) ? '0 : in1;
+        // r0_a <= deserialize_sum(in1);//(in1 === 'x) ? '0 : in1;
+        r0_a.sgn <= in1[41];
+        r0_a.scale <= in1[40:32];
+        r0_a.fraction <= in1[31:2];
+        r0_a.inf <= in1[1];
+        r0_a.zero <= in1[0];
 
-        r0_bb <= deserialize(in2);
+        // r0_bb <= deserialize(in2);
 
-        r0_b.sgn = r0_bb.sgn;
-        r0_b.scale = r0_bb.scale;
-        r0_b.fraction = {r0_bb.fraction, {ABITS-FBITS{1'b0}}};
-        r0_b.inf = r0_bb.inf;
-        r0_b.zero = r0_bb.zero;
+        r0_b.sgn <= in1[37];
+        r0_b.scale <= in1[36:28];
+        r0_b.fraction <= {in1[27:2], {ABITS-FBITS{1'b0}}};
+        r0_b.inf <= in1[1];
+        r0_b.zero <= in1[0];
+
+        // r0_b.sgn = r0_bb.sgn;
+        // r0_b.scale = r0_bb.scale;
+        // r0_b.fraction = {r0_bb.fraction, {ABITS-FBITS{1'b0}}};
+        // r0_b.inf = r0_bb.inf;
+        // r0_b.zero = r0_bb.zero;
 
         r0_start <= (start === 'x) ? '0 : start;
     end
@@ -226,6 +237,7 @@ module positmult_4_raw_sumval_es3 (clk, in1, in2, start, result, done);
     assign result_product.fraction = r3_product.fraction;
     assign result_product.scale = r3_product.scale;
 
-    assign result = serialize_prod(result_product);
+    // assign result = serialize_prod(result_product);
+    assign result = result_product.sgn & result_product.scale & result_product.fraction & result_product.inf & result_product.zero;
 
 endmodule

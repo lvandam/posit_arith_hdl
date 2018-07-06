@@ -14,7 +14,12 @@ module posit_normalize_es3 (in1, result, inf, zero);
     output wire inf, zero;
 
     value in;
-    assign in = deserialize(in1);
+    // assign in = deserialize(in1);
+    assign in.sgn = in1[37];
+    assign in.scale = in1[36:28];
+    assign in.fraction = in1[27:2];
+    assign in.inf = in1[1];
+    assign in.zero = in1[0];
 
     logic [6:0] regime_shift_amount;
     assign regime_shift_amount = (in.scale[8] == 0) ? 1 + (in.scale >> ES) : -(in.scale >> ES);

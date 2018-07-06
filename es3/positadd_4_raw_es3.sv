@@ -15,7 +15,6 @@ module positadd_4_raw_es3 (clk, in1, in2, start, result, done);
     output wire [POSIT_SERIALIZED_WIDTH_SUM_ES3-1:0] result;
     output wire done;
 
-
     //   ___
     //  / _ \
     // | | | |
@@ -31,8 +30,21 @@ module positadd_4_raw_es3 (clk, in1, in2, start, result, done);
 
     always @(posedge clk)
     begin
-        r0_a <= deserialize(in1);//(in1.fraction === 'x) ? '0 : in1;
-        r0_b <= deserialize(in2);//(in2.fraction === 'x) ? '0 : in2;
+        // r0_a <= deserialize(in1);//(in1.fraction === 'x) ? '0 : in1;
+        // r0_b <= deserialize(in2);//(in2.fraction === 'x) ? '0 : in2;
+
+        r0_a.sgn <= in1[37];
+        r0_a.scale <= in1[36:28];
+        r0_a.fraction <= in1[27:2];
+        r0_a.inf <= in1[1];
+        r0_a.zero <= in1[0];
+
+        r0_b.sgn <= in2[37];
+        r0_b.scale <= in2[36:28];
+        r0_b.fraction <= in2[27:2];
+        r0_b.inf <= in2[1];
+        r0_b.zero <= in2[0];
+
         r0_start <= (start === 'x) ? '0 : start;
     end
 
@@ -285,6 +297,6 @@ module positadd_4_raw_es3 (clk, in1, in2, start, result, done);
     assign result_sum.fraction = r3_sum.fraction;
     assign result_sum.scale = r3_sum.scale;
 
-    assign result = serialize_sum(result_sum);
+    assign result = result_sum.sgn & result_sum.scale & result_sum.fraction & result_sum.inf & result_sum.zero;//serialize_sum(result_sum);
 
 endmodule

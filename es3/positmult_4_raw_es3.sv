@@ -28,8 +28,21 @@ module positmult_4_raw_es3 (clk, in1, in2, start, result, done);
 
     always @(posedge clk)
     begin
-        r0_a <= deserialize(in1);//(in1 === 'x) ? '0 : in1;
-        r0_b <= deserialize(in2);//(in2 === 'x) ? '0 : in2;
+        // r0_a <= deserialize(in1);//(in1 === 'x) ? '0 : in1;
+        // r0_b <= deserialize(in2);//(in2 === 'x) ? '0 : in2;
+
+        r0_a.sgn <= in1[37];
+        r0_a.scale <= in1[36:28];
+        r0_a.fraction <= in1[27:2];
+        r0_a.inf <= in1[1];
+        r0_a.zero <= in1[0];
+
+        r0_b.sgn <= in2[37];
+        r0_b.scale <= in2[36:28];
+        r0_b.fraction <= in2[27:2];
+        r0_b.inf <= in2[1];
+        r0_b.zero <= in2[0];
+
         r0_start <= (start === 'x) ? '0 : start;
     end
 
@@ -216,6 +229,7 @@ module positmult_4_raw_es3 (clk, in1, in2, start, result, done);
     assign result_product.fraction = r3_product.fraction;
     assign result_product.scale = r3_product.scale;
 
-    assign result = serialize_prod(result_product);
+    // assign result = serialize_prod(result_product);
+    assign result = result_product.sgn & result_product.scale & result_product.fraction & result_product.inf & result_product.zero;
 
 endmodule

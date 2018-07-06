@@ -39,11 +39,11 @@ module positmult_4_raw_sumval_es3 (clk, in1, in2, start, result, done);
 
         // r0_bb <= deserialize(in2);
 
-        r0_b.sgn <= in1[37];
-        r0_b.scale <= in1[36:28];
-        r0_b.fraction <= {in1[27:2], {ABITS-FBITS{1'b0}}};
-        r0_b.inf <= in1[1];
-        r0_b.zero <= in1[0];
+        r0_b.sgn <= in2[37];
+        r0_b.scale <= in2[36:28];
+        r0_b.fraction <= {in2[27:2], {ABITS-FBITS{1'b0}}};
+        r0_b.inf <= in2[1];
+        r0_b.zero <= in2[0];
 
         // r0_b.sgn = r0_bb.sgn;
         // r0_b.scale = r0_bb.scale;

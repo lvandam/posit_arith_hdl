@@ -5,7 +5,6 @@
 `timescale 1ns / 1ps
 `default_nettype wire
 
-// `include "posit_defines_es3.sv"
 import posit_defines_es3::*;
 
 module positadd_4_raw_es3 (clk, in1, in2, start, result, done);
@@ -21,50 +20,54 @@ module positadd_4_raw_es3 (clk, in1, in2, start, result, done);
     // | | | |
     // | |_| |
     //  \___/
-    // logic [31:0] r0_in1, r0_in2;
     logic r0_start;
 
     value r0_a, r0_b;
-    // logic [NBITS-2:0] r0_in1_abs, r0_in2_abs;
     logic r0_operation;
 
     always @(posedge clk)
     begin
-        // r0_a <= deserialize(in1);//(in1.fraction === 'x) ? '0 : in1;
-        // r0_b <= deserialize(in2);//(in2.fraction === 'x) ? '0 : in2;
+        if (in1[0] == 1'b1)
+        begin
+            r0_a.sgn <= '0;
+            r0_a.scale <= '0;
+            r0_a.fraction <= '0;
+            r0_a.inf <= '0;
+            r0_a.zero <= in1[0];
+        end
+        else
+        begin
+            r0_a.sgn <= in1[37];
+            r0_a.scale <= in1[36:28];
+            r0_a.fraction <= in1[27:2];
+            r0_a.inf <= in1[1];
+            r0_a.zero <= in1[0];
+        end
 
-        r0_a.sgn <= in1[37];
-        r0_a.scale <= in1[36:28];
-        r0_a.fraction <= in1[27:2];
-        r0_a.inf <= in1[1];
-        r0_a.zero <= in1[0];
-
-        r0_b.sgn <= in2[37];
-        r0_b.scale <= in2[36:28];
-        r0_b.fraction <= in2[27:2];
-        r0_b.inf <= in2[1];
-        r0_b.zero <= in2[0];
+        if (in2[0] == 1'b1)
+        begin
+            r0_b.sgn <= '0;
+            r0_b.scale <= '0;
+            r0_b.fraction <= '0;
+            r0_b.inf <= '0;
+            r0_b.zero <= in2[0];
+        end
+        else
+        begin
+            r0_b.sgn <= in2[37];
+            r0_b.scale <= in2[36:28];
+            r0_b.fraction <= in2[27:2];
+            r0_b.inf <= in2[1];
+            r0_b.zero <= in2[0];
+        end
 
         r0_start <= (start === 'x) ? '0 : start;
     end
 
-    // Extract posit characteristics, among others the regime & exponent scales
-    // posit_extract_es3 a_extract (
-    //     .in(r0_in1),
-    //     .abs(r0_in1_abs),
-    //     .out(r0_a)
-    // );
-    //
-    // posit_extract_es3 b_extract (
-    //     .in(r0_in2),
-    //     .abs(r0_in2_abs),
-    //     .out(r0_b)
-    // );
-
     value r0_low, r0_hi;
 
     logic r0_a_lt_b; // A larger than B
-    assign r0_a_lt_b = {r0_a.scale, r0_a.fraction} >= {r0_b.scale, r0_b.fraction} ? '1 : '0;//r0_in1_abs[NBITS-2:0] >= r0_in2_abs[NBITS-2:0] ? '1 : '0;
+    assign r0_a_lt_b = {r0_a.scale, r0_a.fraction} >= {r0_b.scale, r0_b.fraction} ? '1 : '0;
 
     assign r0_operation = r0_a.sgn ~^ r0_b.sgn; // 1 = equal signs = add, 0 = unequal signs = subtract
     assign r0_low = r0_a_lt_b ? r0_b : r0_a;
@@ -114,13 +117,11 @@ module positadd_4_raw_es3 (clk, in1, in2, start, result, done);
     assign r1_truncated_after_equalizing = |r1_low_fraction_shifted[ABITS-4:0];
 
     // Add the fractions
-    logic unsigned [ABITS-1:0] r1_fraction_sum_raw, r1_fraction_sum_raw_add, r1_fraction_sum_raw_sub;
+    logic unsigned [ABITS:0] r1_fraction_sum_raw, r1_fraction_sum_raw_add, r1_fraction_sum_raw_sub;
 
     assign r1_fraction_sum_raw_add = {~r1_hi.zero, r1_hi.fraction, {2{1'b0}}} + r1_low_fraction_shifted[2*ABITS-4:ABITS-2];
     assign r1_fraction_sum_raw_sub = {~r1_hi.zero, r1_hi.fraction, {2{1'b0}}} - r1_low_fraction_shifted[2*ABITS-4:ABITS-2];
     assign r1_fraction_sum_raw = r1_operation ? r1_fraction_sum_raw_add : r1_fraction_sum_raw_sub;
-
-
 
     // Result normalization: shift until normalized (and fix the sign)
     // Find the hidden bit (leading zero counter)
@@ -134,7 +135,6 @@ module positadd_4_raw_es3 (clk, in1, in2, start, result, done);
     );
 
     assign r1_scale_sum = r1_fraction_sum_raw[ABITS-1] ? (r1_hi.scale + 1) : (~r1_fraction_sum_raw[ABITS-2] ? (r1_hi.scale - r1_hidden_pos + 1) : r1_hi.scale);
-
 
 
     //  ___
@@ -163,8 +163,6 @@ module positadd_4_raw_es3 (clk, in1, in2, start, result, done);
         r2_scale_sum <= r1_scale_sum;
     end
 
-
-
     logic [6:0] r2_regime_shift_amount;
     assign r2_regime_shift_amount = (r2_scale_sum[8] == 0) ? 1 + (r2_scale_sum >> ES) : -(r2_scale_sum >> ES);
 
@@ -178,7 +176,7 @@ module positadd_4_raw_es3 (clk, in1, in2, start, result, done);
     assign r2_out_rounded_zero = (r2_hidden_pos >= ABITS); // The hidden bit is shifted out of range, our sum becomes 0 (when truncated)
 
     // Normalize the sum output (shift left)
-    logic [ABITS-1:0] r2_fraction_sum_normalized;
+    logic [ABITS:0] r2_fraction_sum_normalized;
     shift_left #(
         .N(ABITS-0),
         .S(5)
@@ -190,26 +188,6 @@ module positadd_4_raw_es3 (clk, in1, in2, start, result, done);
 
     assign r2_sum.fraction = r2_fraction_sum_normalized;
 
-
-    // STICKY BIT CALCULATION (all the bits from [msb, lsb], that is, msb is included)
-    // logic [ABITS-1:0] r2_fraction_leftover;
-    // logic [5:0] r2_leftover_shift;
-    // assign r2_leftover_shift = NBITS - ES - 2 - r2_regime_shift_amount;
-
-    // // Determine all fraction bits that are truncated in the final result
-    // shift_left #(
-    //     .N(ABITS-0),
-    //     .S(6)
-    // ) fraction_leftover_shift (
-    //     .a(r2_fraction_sum_normalized), // exponent + fraction bits
-    //     .b(r2_leftover_shift), // Shift to right by regime value (clip at maximum number of bits)
-    //     .c(r2_fraction_leftover)
-    // );
-
-    // logic [ES-1:0] r2_result_exponent;
-    // assign r2_result_exponent = r2_scale_sum % (2 << ES);
-
-
     //  ____
     // |___ \
     //   __) |
@@ -217,86 +195,23 @@ module positadd_4_raw_es3 (clk, in1, in2, start, result, done);
     //  ___) |
     // |____/
     logic r3_start;
-
     value_sum r3_sum;
-    // logic [2*NBITS-1:0] r3_regime_exp_fraction;
-    // logic [6:0] r3_regime_shift_amount;
-    // logic r3_bafter, r3_sticky_bit, r3_out_rounded_zero;
-    // logic [ABITS-1:0] r3_fraction_leftover, r3_fraction_sum_normalized;
-    // logic r3_truncated_after_equalizing;
-    // logic [ES-1:0] r3_result_exponent;
 
     always @(posedge clk)
     begin
         r3_start <= r2_start;
-
         r3_sum <= r2_sum;
-        // r3_regime_shift_amount <= r2_regime_shift_amount;
-        // r3_out_rounded_zero <= r2_out_rounded_zero;
-        //
-        // r3_truncated_after_equalizing <= r2_truncated_after_equalizing;
-        // r3_fraction_leftover <= r2_fraction_leftover;
-        // r3_fraction_sum_normalized <= r2_fraction_sum_normalized;
-        // r3_result_exponent <= r2_result_exponent;
     end
-
-    // assign r3_sticky_bit = r3_truncated_after_equalizing | |r3_fraction_leftover[ABITS-2:0]; // Logical OR of all truncated fraction multiplication bits
-    // assign r3_bafter = r3_fraction_leftover[ABITS-1];
-    //
-    // logic [27:0] r3_fraction_truncated;
-    // assign r3_fraction_truncated = {r3_fraction_sum_normalized[ABITS-1:3], (r3_fraction_sum_normalized[2] | r3_sticky_bit)};
-
-    // assign r3_regime_exp_fraction = { {NBITS-1{~r3_sum.scale[8]}}, // Regime leading bits
-    //                         r3_sum.scale[8], // Regime terminating bit
-    //                         r3_result_exponent, // Exponent
-    //                         r3_fraction_truncated[27:0] }; // Fraction
-
-    // logic [2*NBITS-1:0] r3_exp_fraction_shifted_for_regime;
-    // shift_right #(
-    //     .N(2*NBITS),
-    //     .S(7)
-    // ) shift_in_regime (
-    //     .a(r3_regime_exp_fraction), // exponent + fraction bits
-    //     .b(r3_regime_shift_amount), // Shift to right by regime value (clip at maximum number of bits)
-    //     .c(r3_exp_fraction_shifted_for_regime)
-    // );
-
-    // TODO Inward projection?
-    // Determine result (without sign), the unsigned regime+exp+fraction
-    // logic [NBITS-2:0] r3_result_no_sign;
-    // assign r3_result_no_sign = r3_exp_fraction_shifted_for_regime[NBITS-1:1];
-
-    // Perform rounding (based on sticky bit)
-    // logic r3_blast, r3_tie_to_even, r3_round_nearest;
-    // logic [NBITS-2:0] r3_result_no_sign_rounded;
-
-    // assign r3_blast = r3_result_no_sign[0];
-    // assign r3_tie_to_even = r3_blast & r3_bafter; // Value 1.5 -> round to 2 (even)
-    // assign r3_round_nearest = r3_bafter & r3_sticky_bit; // Value > 0.5: round to nearest
-
-    // assign r3_result_no_sign_rounded = (r3_tie_to_even | r3_round_nearest) ? (r3_result_no_sign + 1) : r3_result_no_sign;
-
-    // In case the product is negative, take 2's complement of everything but the sign
-    // logic [NBITS-2:0] r3_signed_result_no_sign;
-    // assign r3_signed_result_no_sign = r3_sum.sgn ? -r3_result_no_sign_rounded[NBITS-2:0] : r3_result_no_sign_rounded[NBITS-2:0];
-
-    // Final output
-    // assign result = (r3_out_rounded_zero | r3_sum.zero | r3_sum.inf) ? {r3_sum.inf, {NBITS-1{1'b0}}} : {r3_sum.sgn, r3_signed_result_no_sign[NBITS-2:0]};
-
-
-    // assign inf = r3_sum.inf;
-    // assign zero = ~r3_sum.inf & r3_sum.zero;
 
     assign done = r3_start;
 
     value_sum result_sum;
-
     assign result_sum.sgn = r3_sum.sgn;
     assign result_sum.inf = r3_sum.inf;
     assign result_sum.zero = ~r3_sum.inf & r3_sum.zero;
     assign result_sum.fraction = r3_sum.fraction;
     assign result_sum.scale = r3_sum.scale;
 
-    assign result = {result_sum.sgn, result_sum.scale, result_sum.fraction, result_sum.inf, result_sum.zero};//serialize_sum(result_sum);
+    assign result = {result_sum.sgn, result_sum.scale, result_sum.fraction, result_sum.inf, result_sum.zero};
 
 endmodule

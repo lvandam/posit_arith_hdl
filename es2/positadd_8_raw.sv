@@ -11,7 +11,7 @@ module positadd_8_raw (clk, in1, in2, start, result, done);
 
     input wire clk, start;
     input wire [POSIT_SERIALIZED_WIDTH_ES2-1:0] in1, in2;
-    output wire [POSIT_SERIALIZED_WIDTH_ES2-1:0] result;
+    output wire [POSIT_SERIALIZED_WIDTH_SUM_ES2-1:0] result;
     output wire done;
 
 
@@ -24,7 +24,6 @@ module positadd_8_raw (clk, in1, in2, start, result, done);
     logic r0_start;
 
     value r0_a, r0_b;
-    logic [NBITS-2:0] r0_in1_abs, r0_in2_abs;
     logic r0_operation;
 
     always @(posedge clk)
@@ -69,7 +68,7 @@ module positadd_8_raw (clk, in1, in2, start, result, done);
     value r0_low, r0_hi;
 
     logic r0_a_lt_b; // A larger than B
-    assign r0_a_lt_b = r0_in1_abs[NBITS-2:0] >= r0_in2_abs[NBITS-2:0] ? '1 : '0;
+    assign r0_a_lt_b = {r0_a.scale, r0_a.fraction} >= {r0_b.scale, r0_b.fraction} ? '1 : '0;
 
     assign r0_operation = r0_a.sgn ~^ r0_b.sgn; // 1 = equal signs = add, 0 = unequal signs = subtract
     assign r0_low = r0_a_lt_b ? r0_b : r0_a;
@@ -196,8 +195,6 @@ module positadd_8_raw (clk, in1, in2, start, result, done);
         .c(r2_fraction_sum_normalized)
     );
 
-    assign r2_sum.fraction = r2_fraction_sum_normalized;
-
     //  ___    ____
     // |__ \  |  _ \
     //    ) | | |_) |
@@ -210,7 +207,9 @@ module positadd_8_raw (clk, in1, in2, start, result, done);
     always @(posedge clk)
     begin
         r2b_start <= r2_start;
+
         r2b_sum <= r2_sum;
+        r2b_sum.fraction <= r2_fraction_sum_normalized[ABITS:1];
     end
 
     //  ____

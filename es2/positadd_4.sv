@@ -109,8 +109,6 @@ module positadd_4 (clk, in1, in2, start, result, inf, zero, done);
     assign r1_fraction_sum_raw = r1_operation ? r1_fraction_sum_raw_add : r1_fraction_sum_raw_sub;
 
 
-
-
     //  ___
     // |__ \
     //    ) |

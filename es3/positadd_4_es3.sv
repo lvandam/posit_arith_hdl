@@ -150,8 +150,6 @@ module positadd_4_es3 (clk, in1, in2, start, result, inf, zero, done);
         r2_scale_sum <= r1_scale_sum;
     end
 
-
-
     logic [6:0] r2_regime_shift_amount;
     assign r2_regime_shift_amount = (r2_scale_sum[8] == 0) ? 1 + (r2_scale_sum >> ES) : -(r2_scale_sum >> ES);
 

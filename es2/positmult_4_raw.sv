@@ -11,7 +11,7 @@ module positmult_4_raw (clk, in1, in2, start, result, done);
 
     input wire clk, start;
     input wire [POSIT_SERIALIZED_WIDTH_ES2-1:0] in1, in2;
-    output wire [POSIT_SERIALIZED_WIDTH_ES2-1:0] result;
+    output wire [POSIT_SERIALIZED_WIDTH_PRODUCT_ES2-1:0] result;
     output wire done;
 
 

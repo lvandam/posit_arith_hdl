@@ -12,7 +12,7 @@ module positmult_4_raw_sumval (clk, in1, in2, start, result, done);
     input wire clk, start;
     input wire [POSIT_SERIALIZED_WIDTH_SUM_ES2-1:0] in1;
     input wire [POSIT_SERIALIZED_WIDTH_ES2-1:0] in2;
-    output wire [POSIT_SERIALIZED_WIDTH_ES2-1:0] result;
+    output wire [POSIT_SERIALIZED_WIDTH_PRODUCT_ES2-1:0] result;
     output wire done;
 
 
@@ -87,8 +87,8 @@ module positmult_4_raw_sumval (clk, in1, in2, start, result, done);
     logic [MBITS-1:0] r1_fraction_mult, r1_result_fraction;
 
     logic [FHBITS-1:0] r1_r1, r1_r2;
-    assign r1_r1 = {1'b1, r1_a.fraction}; // Add back hidden bit (fraction is without hidden bit)
-    assign r1_r2 = {1'b1, r1_b.fraction}; // Add back hidden bit (fraction is without hidden bit)
+    assign r1_r1 = {1'b1, r1_a.fraction[ABITS-1:ABITS-FBITS]}; // Add back hidden bit (fraction is without hidden bit)
+    assign r1_r2 = {1'b1, r1_b.fraction[ABITS-1:ABITS-FBITS]}; // Add back hidden bit (fraction is without hidden bit)
     assign r1_fraction_mult = r1_r1 * r1_r2; // Unsigned multiplication of fractions
 
     // Check if the radix point needs to shift

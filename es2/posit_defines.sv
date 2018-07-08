@@ -15,32 +15,36 @@ parameter MAX_FRACTION_SHIFT = (1 << ES) * (NBITS - 2);
 parameter FBITS_ACCUM = MAX_FRACTION_SHIFT + FBITS;
 parameter ABITS_ACCUM = FBITS_ACCUM + 4;
 
-typedef struct {
-    logic sign;
-    logic signed [7:0] scale;
-    logic [FBITS-1:0] fraction;
-    logic inf;
-    logic zero;
-} value;
+parameter POSIT_SERIALIZED_WIDTH_ES2 = 1+8+FBITS+1+1;
+parameter POSIT_SERIALIZED_WIDTH_SUM_ES2 = 1+8+ABITS+1+1;
+parameter POSIT_SERIALIZED_WIDTH_PRODUCT_ES2 = 1+9+MBITS+1+1;
 
 typedef struct {
-    logic sign;
-    logic signed [8:0] scale;
-    logic [MBITS-1:0] fraction;
-    logic inf;
-    logic zero;
-} value_product;
+    logic sgn;                   // 1
+    logic signed [7:0] scale;    // 8
+    logic [FBITS-1:0] fraction;  // 27
+    logic inf;                   // 1
+    logic zero;                  // 1
+} value; // 38
 
 typedef struct {
-    logic sign;
-    logic signed [7:0] scale;
-    logic [ABITS-1:0] fraction;
-    logic inf;
-    logic zero;
-} value_sum;
+    logic sgn;                   // 1
+    logic signed [8:0] scale;    // 9
+    logic [MBITS-1:0] fraction;  // 56
+    logic inf;                   // 1
+    logic zero;                  // 1
+} value_product; // 68
 
 typedef struct {
-    logic sign;
+    logic sgn;                   // 1
+    logic signed [7:0] scale;    // 8
+    logic [ABITS-1:0] fraction;  // 31
+    logic inf;                   // 1
+    logic zero;                  // 1
+} value_sum; // 42
+
+typedef struct {
+    logic sgn;
     logic signed [7:0] scale;
     logic [FBITS_ACCUM-1:0] fraction;
     logic inf;

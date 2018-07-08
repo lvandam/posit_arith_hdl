@@ -1,6 +1,6 @@
 // Laurens van Dam
 // Delft University of Technology
-// May 2018
+// July 2018
 
 `timescale 1ns / 1ps
 `default_nettype wire
@@ -14,7 +14,6 @@ module posit_normalize_es3 (in1, result, inf, zero);
     output wire inf, zero;
 
     value in;
-    // assign in = deserialize(in1);
     assign in.sgn = in1[37];
     assign in.scale = in1[36:28];
     assign in.fraction = in1[27:2];
@@ -23,21 +22,6 @@ module posit_normalize_es3 (in1, result, inf, zero);
 
     logic [6:0] regime_shift_amount;
     assign regime_shift_amount = (in.scale[8] == 0) ? 1 + (in.scale >> ES) : -(in.scale >> ES);
-
-    // STICKY BIT CALCULATION (all the bits from [msb, lsb], that is, msb is included)
-    logic [ABITS-1:0] fraction_leftover;
-    logic [5:0] leftover_shift;
-    assign leftover_shift = NBITS - ES - 2 - regime_shift_amount;
-
-    // Determine all fraction bits that are truncated in the final result
-    shift_left #(
-        .N(ABITS-0),
-        .S(6)
-    ) fraction_leftover_shift (
-        .a({in.fraction, {ABITS-FBITS{1'b0}}}), // exponent + fraction bits
-        .b(leftover_shift), // Shift to right by regime value (clip at maximum number of bits)
-        .c(fraction_leftover)
-    );
 
     logic [ES-1:0] result_exponent;
     assign result_exponent = in.scale % (2 << ES);

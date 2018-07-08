@@ -23,10 +23,10 @@ module posit_extract_accum (input wire [NBITS-1:0] in, output wire [NBITS-2:0] a
     assign out.zero = ~(in[NBITS-1] | posit_nonzero_without_sign);
     assign out.inf = in[NBITS-1] & (~posit_nonzero_without_sign);
 
-    assign out.sign = in[NBITS-1];
+    assign out.sgn = in[NBITS-1];
 
     // Unsigned input (*_u = unsigned)
-    assign in_u = out.sign ? -in : in;
+    assign in_u = out.sgn ? -in : in;
 
     // Leading-One detection for regime
     LOD_N #(

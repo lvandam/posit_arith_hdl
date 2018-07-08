@@ -1,14 +1,17 @@
 // Laurens van Dam
 // Delft University of Technology
-// May 2018
+// July 2018
 
 `timescale 1ns / 1ps
 `default_nettype wire
 
-// `include "posit_defines.sv"
 import posit_defines::*;
 
-module posit_extract (input wire [NBITS-1:0] in, output wire [NBITS-2:0] abs, output value out);
+module posit_extract_raw (in1, absolute, result);
+    input wire [NBITS-1                            : 0] in1;
+    output wire [NBITS-2                           : 0] absolute;
+    output wire [POSIT_SERIALIZED_WIDTH_ES2-1 : 0] result;
+
     logic [7:0] regime_scale;
     logic [4:0] regime_u, k0, k1;
     logic [NBITS-1:0] exp_fraction_u;
@@ -17,16 +20,17 @@ module posit_extract (input wire [NBITS-1:0] in, output wire [NBITS-2:0] abs, ou
 
     // Check if part without sign is non-zero (to determine inf and zero cases)
     logic posit_nonzero_without_sign;
-    assign posit_nonzero_without_sign = |in[NBITS-2:0];
+    assign posit_nonzero_without_sign = |in1[NBITS-2:0];
+
+    value result_val;
 
     // Special case handling (inf, zero) for both inputs
-    assign out.zero = ~(in[NBITS-1] | posit_nonzero_without_sign);
-    assign out.inf = in[NBITS-1] & (~posit_nonzero_without_sign);
-
-    assign out.sgn = in[NBITS-1];
+    assign result_val.zero = ~(in1[NBITS-1] | posit_nonzero_without_sign);
+    assign result_val.inf = in1[NBITS-1] & (~posit_nonzero_without_sign);
+    assign result_val.sgn = in1[NBITS-1];
 
     // Unsigned input (*_u = unsigned)
-    assign in_u = out.sgn ? -in : in;
+    assign in_u = result_val.sgn ? -in1 : in1;
 
     // Leading-One detection for regime
     LOD_N #(
@@ -61,11 +65,13 @@ module posit_extract (input wire [NBITS-1:0] in, output wire [NBITS-2:0] abs, ou
         .c(exp_fraction_u)
     );
 
-    assign out.fraction = exp_fraction_u[NBITS-ES-1:3];
+    assign result_val.fraction = exp_fraction_u[NBITS-ES-1:3];
 
     // Scale = k*(2^es) + 2^exp
-    assign out.scale = regime_scale + exp_fraction_u[NBITS-1:NBITS-ES];
+    assign result_val.scale = regime_scale + exp_fraction_u[NBITS-1:NBITS-ES];
 
-    assign abs = in_u[NBITS-2:0];
+    assign absolute = in_u[NBITS-2:0];
+
+    assign result = {result_val.sgn, result_val.scale, result_val.fraction, result_val.inf, result_val.zero};
 
 endmodule

@@ -5,14 +5,16 @@
 `timescale 1ns / 1ps
 `default_nettype wire
 
-import posit_defines_es3::*;
+import posit_defines::*;
 
-module positmult_4_raw_es3 (clk, in1, in2, start, result, done);
+module positmult_4_raw_sumval (clk, in1, in2, start, result, done);
 
     input wire clk, start;
-    input wire [POSIT_SERIALIZED_WIDTH_ES3-1:0] in1, in2;
-    output wire [POSIT_SERIALIZED_WIDTH_PRODUCT_ES3-1:0] result;
+    input wire [POSIT_SERIALIZED_WIDTH_SUM_ES2-1:0] in1;
+    input wire [POSIT_SERIALIZED_WIDTH_ES2-1:0] in2;
+    output wire [POSIT_SERIALIZED_WIDTH_ES2-1:0] result;
     output wire done;
+
 
     //   ___
     //  / _ \
@@ -20,10 +22,9 @@ module positmult_4_raw_es3 (clk, in1, in2, start, result, done);
     // | | | |
     // | |_| |
     //  \___/
-
     logic r0_start;
 
-    value r0_a, r0_b;
+    value_sum r0_a, r0_b;
 
     always @(posedge clk)
     begin
@@ -37,9 +38,9 @@ module positmult_4_raw_es3 (clk, in1, in2, start, result, done);
         end
         else
         begin
-            r0_a.sgn <= in1[37];
-            r0_a.scale <= in1[36:28];
-            r0_a.fraction <= in1[27:2];
+            r0_a.sgn <= in1[41];
+            r0_a.scale <= in1[40:33];
+            r0_a.fraction <= in1[32:2];
             r0_a.inf <= in1[1];
             r0_a.zero <= in1[0];
         end
@@ -55,8 +56,8 @@ module positmult_4_raw_es3 (clk, in1, in2, start, result, done);
         else
         begin
             r0_b.sgn <= in2[37];
-            r0_b.scale <= in2[36:28];
-            r0_b.fraction <= in2[27:2];
+            r0_b.scale <= in2[36:29];
+            r0_b.fraction <= {in2[28:2], {ABITS-FBITS{1'b0}}};
             r0_b.inf <= in2[1];
             r0_b.zero <= in2[0];
         end
@@ -72,7 +73,7 @@ module positmult_4_raw_es3 (clk, in1, in2, start, result, done);
     //  |_|
     logic r1_start;
 
-    value r1_a, r1_b;
+    value_sum r1_a, r1_b;
     value_product r1_product;
 
     always @(posedge clk)
@@ -131,6 +132,8 @@ module positmult_4_raw_es3 (clk, in1, in2, start, result, done);
         r3_product <= r2_product;
     end
 
+
+    // Final output
     assign done = r3_start;
 
     value_product result_product;

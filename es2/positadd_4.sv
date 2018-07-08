@@ -54,7 +54,7 @@ module positadd_4 (clk, in1, in2, start, result, inf, zero, done);
     logic r0_a_lt_b; // A larger than B
     assign r0_a_lt_b = r0_in1_abs[NBITS-2:0] >= r0_in2_abs[NBITS-2:0] ? '1 : '0;
 
-    assign r0_operation = r0_a.sign ~^ r0_b.sign; // 1 = equal signs = add, 0 = unequal signs = subtract
+    assign r0_operation = r0_a.sgn ~^ r0_b.sgn; // 1 = equal signs = add, 0 = unequal signs = subtract
     assign r0_low = r0_a_lt_b ? r0_b : r0_a;
     assign r0_hi = r0_a_lt_b ? r0_a : r0_b;
 
@@ -148,7 +148,7 @@ module positadd_4 (clk, in1, in2, start, result, inf, zero, done);
     logic signed [7:0] r2_scale_sum;
     assign r2_scale_sum = r2_fraction_sum_raw[ABITS] ? (r2_hi.scale + 1) : (~r2_fraction_sum_raw[ABITS-1] ? (r2_hi.scale - r2_hidden_pos + 1) : r2_hi.scale);
 
-    assign r2_sum.sign = r2_hi.sign;
+    assign r2_sum.sgn = r2_hi.sgn;
     assign r2_sum.scale = r2_scale_sum;
     assign r2_sum.zero = r2_hi.zero & r2_low.zero;
     assign r2_sum.inf = r2_hi.inf | r2_low.inf;
@@ -259,10 +259,10 @@ module positadd_4 (clk, in1, in2, start, result, inf, zero, done);
 
     // In case the product is negative, take 2's complement of everything but the sign
     logic [NBITS-2:0] r3_signed_result_no_sign;
-    assign r3_signed_result_no_sign = r3_sum.sign ? -r3_result_no_sign_rounded[NBITS-2:0] : r3_result_no_sign_rounded[NBITS-2:0];
+    assign r3_signed_result_no_sign = r3_sum.sgn ? -r3_result_no_sign_rounded[NBITS-2:0] : r3_result_no_sign_rounded[NBITS-2:0];
 
     // Final output
-    assign result = (r3_out_rounded_zero | r3_sum.zero | r3_sum.inf) ? {r3_sum.inf, {NBITS-1{1'b0}}} : {r3_sum.sign, r3_signed_result_no_sign[NBITS-2:0]};
+    assign result = (r3_out_rounded_zero | r3_sum.zero | r3_sum.inf) ? {r3_sum.inf, {NBITS-1{1'b0}}} : {r3_sum.sgn, r3_signed_result_no_sign[NBITS-2:0]};
     assign inf = r3_sum.inf;
     assign zero = ~r3_sum.inf & r3_sum.zero;
     assign done = r3_start;

@@ -40,7 +40,7 @@ module positmult (clk, in1, in2, start, result, inf, zero, done);
     assign result_fraction = fraction_mult[MBITS-1] ? (fraction_mult << 1) : (fraction_mult << 2); // Shift hidden bit out
 
     assign product.fraction = result_fraction[MBITS-1:0];
-    assign product.sign = a.sign ^ b.sign;
+    assign product.sgn = a.sgn ^ b.sgn;
     assign product.zero = a.zero | b.zero;
     assign product.inf = a.inf | b.inf;
 
@@ -121,10 +121,10 @@ module positmult (clk, in1, in2, start, result, inf, zero, done);
 
     // In case the product is negative, take 2's complement of everything but the sign
     logic [NBITS-2:0] signed_result_no_sign;
-    assign signed_result_no_sign = product.sign ? -result_no_sign_rounded[NBITS-2:0] : result_no_sign_rounded[NBITS-2:0];
+    assign signed_result_no_sign = product.sgn ? -result_no_sign_rounded[NBITS-2:0] : result_no_sign_rounded[NBITS-2:0];
 
     // Final output
-    assign result = (product.zero | product.inf) ? {product.inf, {NBITS-1{1'b0}}} : {product.sign, signed_result_no_sign[NBITS-2:0]};
+    assign result = (product.zero | product.inf) ? {product.inf, {NBITS-1{1'b0}}} : {product.sgn, signed_result_no_sign[NBITS-2:0]};
     assign inf = product.inf;
     assign zero = ~product.inf & product.zero;
     assign done = start;

@@ -35,11 +35,11 @@ module positadd (clk, in1, in2, start, result, inf, zero, done);
 
     logic a_lt_b; // A larger than B
     logic [NBITS-1:0] in1_abs, in2_abs; // absolute inputs (TODO integrate this somewhere, unnecessary logic)
-    assign in1_abs = a.sign ? -in1 : in1;
-    assign in2_abs = b.sign ? -in2 : in2;
+    assign in1_abs = a.sgn ? -in1 : in1;
+    assign in2_abs = b.sgn ? -in2 : in2;
     assign a_lt_b = in1_abs[NBITS-2:0] >= in2_abs[NBITS-2:0] ? '1 : '0;
 
-    assign operation = a.sign ~^ b.sign; // 1 = equal signs = add, 0 = unequal signs = subtract
+    assign operation = a.sgn ~^ b.sgn; // 1 = equal signs = add, 0 = unequal signs = subtract
     assign low = a_lt_b ? b : a;
     assign hi = a_lt_b ? a : b;
 
@@ -102,7 +102,7 @@ module positadd (clk, in1, in2, start, result, inf, zero, done);
     logic out_rounded_zero;
     assign out_rounded_zero = (hidden_pos >= ABITS); // The hidden bit is shifted out of range, our sum becomes 0 (when truncated)
 
-    assign sum.sign = hi.sign;
+    assign sum.sgn = hi.sgn;
     assign sum.scale = scale_sum;
 
     // PACK INTO POSIT
@@ -168,10 +168,10 @@ module positadd (clk, in1, in2, start, result, inf, zero, done);
 
     // In case the product is negative, take 2's complement of everything but the sign
     logic [NBITS-2:0] signed_result_no_sign;
-    assign signed_result_no_sign = sum.sign ? -result_no_sign_rounded[NBITS-2:0] : result_no_sign_rounded[NBITS-2:0];
+    assign signed_result_no_sign = sum.sgn ? -result_no_sign_rounded[NBITS-2:0] : result_no_sign_rounded[NBITS-2:0];
 
     // Final output
-    assign result = (out_rounded_zero | sum.zero | sum.inf) ? {sum.inf, {NBITS-1{1'b0}}} : {sum.sign, signed_result_no_sign[NBITS-2:0]};
+    assign result = (out_rounded_zero | sum.zero | sum.inf) ? {sum.inf, {NBITS-1{1'b0}}} : {sum.sgn, signed_result_no_sign[NBITS-2:0]};
     assign inf = sum.inf;
     assign zero = ~sum.inf & sum.zero;
     assign done = start;

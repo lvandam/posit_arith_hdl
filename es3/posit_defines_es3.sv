@@ -20,28 +20,28 @@ parameter POSIT_SERIALIZED_WIDTH_SUM_ES3 = 1+9+ABITS+1+1;
 parameter POSIT_SERIALIZED_WIDTH_PRODUCT_ES3 = 1+10+MBITS+1+1;
 
 typedef struct {
-    logic sgn;
-    logic signed [8:0] scale;
-    logic [FBITS-1:0] fraction;
-    logic inf;
-    logic zero;
-} value;
+    logic sgn;                  // 1
+    logic signed [8:0] scale;   // 9
+    logic [FBITS-1:0] fraction; // 26
+    logic inf;                  // 1
+    logic zero;                 // 1
+} value; // 38
 
 typedef struct {
-    logic sgn;
-    logic signed [9:0] scale;
-    logic [MBITS-1:0] fraction;
-    logic inf;
-    logic zero;
-} value_product;
+    logic sgn;                  // 1
+    logic signed [9:0] scale;   // 10
+    logic [MBITS-1:0] fraction; // 54
+    logic inf;                  // 1
+    logic zero;                 // 1
+} value_product; // 67
 
 typedef struct {
-    logic sgn;
-    logic signed [8:0] scale;
-    logic [ABITS-1:0] fraction;
-    logic inf;
-    logic zero;
-} value_sum;
+    logic sgn;                  // 1
+    logic signed [8:0] scale;   // 9
+    logic [ABITS-1:0] fraction; // 30
+    logic inf;                  // 1
+    logic zero;                 // 1
+} value_sum; // 42
 
 typedef struct {
     logic sgn;

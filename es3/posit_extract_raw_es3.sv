@@ -5,20 +5,19 @@
 `timescale 1ns / 1ps
 `default_nettype wire
 
-// `include "posit_defines_es3.sv"
 import posit_defines_es3::*;
 
 module posit_extract_raw_es3 (in1, absolute, result);
 
-input wire [31                            : 0] in1;
-output wire [30                           : 0] absolute;
-output wire [POSIT_SERIALIZED_WIDTH_ES3-1 : 0] result;
+    input wire [NBITS-1                            : 0] in1;
+    output wire [NBITS-2                           : 0] absolute;
+    output wire [POSIT_SERIALIZED_WIDTH_ES3-1 : 0] result;
 
-logic [8       : 0] regime_scale;
-logic [4       : 0] regime_u, k0, k1;
-logic [NBITS-1 : 0] exp_fraction_u;
-logic [4       : 0] regime_width;
-logic [31      : 0] in_u;
+    logic [8       : 0] regime_scale;
+    logic [4       : 0] regime_u, k0, k1;
+    logic [NBITS-1 : 0] exp_fraction_u;
+    logic [4       : 0] regime_width;
+    logic [31      : 0] in_u;
 
 // Check if part without sign is non-zero (to determine inf and zero cases)
   logic posit_nonzero_without_sign;

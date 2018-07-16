@@ -113,28 +113,12 @@ module positadd_4_raw_es3 (clk, in1, in2, start, result, done);
         .c(r1_low_fraction_shifted)
     );
 
-    logic r1_truncated_after_equalizing;
-    assign r1_truncated_after_equalizing = |r1_low_fraction_shifted[ABITS-4:0];
-
     // Add the fractions
     logic unsigned [ABITS:0] r1_fraction_sum_raw, r1_fraction_sum_raw_add, r1_fraction_sum_raw_sub;
 
     assign r1_fraction_sum_raw_add = {~r1_hi.zero, r1_hi.fraction, {2{1'b0}}} + r1_low_fraction_shifted[2*ABITS-4:ABITS-2];
     assign r1_fraction_sum_raw_sub = {~r1_hi.zero, r1_hi.fraction, {2{1'b0}}} - r1_low_fraction_shifted[2*ABITS-4:ABITS-2];
     assign r1_fraction_sum_raw = r1_operation ? r1_fraction_sum_raw_add : r1_fraction_sum_raw_sub;
-
-    // Result normalization: shift until normalized (and fix the sign)
-    // Find the hidden bit (leading zero counter)
-    logic [4:0] r1_hidden_pos;
-    logic signed [8:0] r1_scale_sum;
-    LOD_N #(
-        .N(32)
-    ) hidden_bit_counter(
-        .in({r1_fraction_sum_raw[ABITS-1:0], 2'b0}),
-        .out(r1_hidden_pos)
-    );
-
-    assign r1_scale_sum = r1_fraction_sum_raw[ABITS-1] ? (r1_hi.scale + 1) : (~r1_fraction_sum_raw[ABITS-2] ? (r1_hi.scale - r1_hidden_pos + 1) : r1_hi.scale);
 
 
     //  ___
@@ -148,7 +132,6 @@ module positadd_4_raw_es3 (clk, in1, in2, start, result, done);
 
     value_sum r2_sum;
     logic unsigned [ABITS-1:0] r2_fraction_sum_raw;
-    logic r2_truncated_after_equalizing, r2_out_rounded_zero;
     logic [4:0] r2_shift_amount_hiddenbit_out, r2_hidden_pos;
     logic signed [8:0] r2_scale_sum;
 
@@ -158,10 +141,18 @@ module positadd_4_raw_es3 (clk, in1, in2, start, result, done);
         r2_hi <= r1_hi;
         r2_low <= r1_low;
         r2_fraction_sum_raw <= r1_fraction_sum_raw;
-        r2_truncated_after_equalizing <= r1_truncated_after_equalizing;
-        r2_hidden_pos <= r1_hidden_pos;
-        r2_scale_sum <= r1_scale_sum;
     end
+
+    // Result normalization: shift until normalized (and fix the sign)
+    // Find the hidden bit (leading zero counter)
+    LOD_N #(
+        .N(32)
+    ) hidden_bit_counter(
+        .in({r2_fraction_sum_raw[ABITS-1:0], 2'b0}),
+        .out(r2_hidden_pos)
+    );
+
+    assign r2_scale_sum = r2_fraction_sum_raw[ABITS-1] ? (r2_hi.scale + 1) : (~r2_fraction_sum_raw[ABITS-2] ? (r2_hi.scale - r2_hidden_pos + 1) : r2_hi.scale);
 
     logic [6:0] r2_regime_shift_amount;
     assign r2_regime_shift_amount = (r2_scale_sum[8] == 0) ? 1 + (r2_scale_sum >> ES) : -(r2_scale_sum >> ES);
@@ -170,23 +161,6 @@ module positadd_4_raw_es3 (clk, in1, in2, start, result, done);
     assign r2_sum.scale = r2_scale_sum;
     assign r2_sum.zero = r2_hi.zero & r2_low.zero;
     assign r2_sum.inf = r2_hi.inf | r2_low.inf;
-
-    assign r2_shift_amount_hiddenbit_out = r2_hidden_pos + 1;
-
-    assign r2_out_rounded_zero = (r2_hidden_pos >= ABITS); // The hidden bit is shifted out of range, our sum becomes 0 (when truncated)
-
-    // Normalize the sum output (shift left)
-    logic [ABITS:0] r2_fraction_sum_normalized;
-    shift_left #(
-        .N(ABITS-0),
-        .S(5)
-    ) ls (
-        .a(r2_fraction_sum_raw[ABITS-1:0]),
-        .b(r2_shift_amount_hiddenbit_out),
-        .c(r2_fraction_sum_normalized)
-    );
-
-    assign r2_sum.fraction = r2_fraction_sum_normalized;
 
     //  ____
     // |___ \
@@ -197,11 +171,29 @@ module positadd_4_raw_es3 (clk, in1, in2, start, result, done);
     logic r3_start;
     value_sum r3_sum;
 
+    logic unsigned [ABITS-1:0] r3_fraction_sum_raw;
+    logic [4:0] r3_shift_amount_hiddenbit_out, r3_hidden_pos;
+    logic [ABITS:0] r3_fraction_sum_normalized;
+
     always @(posedge clk)
     begin
         r3_start <= r2_start;
         r3_sum <= r2_sum;
+
+        r3_fraction_sum_raw <= r2_fraction_sum_raw;
+        r3_hidden_pos <= r2_hidden_pos;
     end
+
+    // Normalize the sum output (shift left)
+    assign r3_shift_amount_hiddenbit_out = r3_hidden_pos + 1;
+    shift_left #(
+        .N(ABITS),
+        .S(5)
+    ) ls (
+        .a(r3_fraction_sum_raw[ABITS-1:0]),
+        .b(r3_shift_amount_hiddenbit_out),
+        .c(r3_fraction_sum_normalized)
+    );
 
     assign done = r3_start;
 
@@ -209,7 +201,7 @@ module positadd_4_raw_es3 (clk, in1, in2, start, result, done);
     assign result_sum.sgn = r3_sum.sgn;
     assign result_sum.inf = r3_sum.inf;
     assign result_sum.zero = ~r3_sum.inf & r3_sum.zero;
-    assign result_sum.fraction = r3_sum.fraction;
+    assign result_sum.fraction = r3_fraction_sum_normalized;
     assign result_sum.scale = r3_sum.scale;
 
     assign result = {result_sum.sgn, result_sum.scale, result_sum.fraction, result_sum.inf, result_sum.zero};

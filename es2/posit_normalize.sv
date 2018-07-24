@@ -7,9 +7,10 @@
 
 import posit_defines::*;
 
-module posit_normalize (in1, result, inf, zero);
+module posit_normalize (in1, truncated, result, inf, zero);
 
     input wire [POSIT_SERIALIZED_WIDTH_ES2-1:0] in1;
+    input wire truncated;
     output wire [31:0] result;
     output wire inf, zero;
 
@@ -49,9 +50,56 @@ module posit_normalize (in1, result, inf, zero);
     logic [NBITS-2:0] result_no_sign;
     assign result_no_sign = exp_fraction_shifted_for_regime[NBITS-1:1];
 
+
+
+
+
+    logic [FBITS-1:0] fraction_leftover;//ABITS TODO Laurens
+    logic [6:0] leftover_shift;
+    assign leftover_shift = NBITS - 4 - regime_shift_amount;
+    // Determine all fraction bits that are truncated in the final result
+    shift_left #(
+        .N(FBITS),//ABITS+1), TODO Laurens
+        .S(7)
+    ) fraction_leftover_shift (
+        .a(in.fraction),
+        .b(leftover_shift), // Shift to right by regime value (clip at maximum number of bits)
+        .c(fraction_leftover)
+    );
+
+    logic sticky_bit;
+    assign sticky_bit = truncated | |fraction_leftover[FBITS-2:0]; // Logical OR of all truncated fraction multiplication bits //ABITS TODO Laurens
+
+    logic bafter;
+    assign bafter = fraction_leftover[FBITS-1];//ABITS TODO Laurens
+
+    // Perform rounding (based on sticky bit)
+    logic blast, tie_to_even, round_nearest;
+    logic [NBITS-2:0] result_no_sign_rounded;
+
+    assign blast = result_no_sign[0];
+    assign tie_to_even = blast & bafter; // Value 1.5 -> round to 2 (even)
+    assign round_nearest = bafter & sticky_bit; // Value > 0.5: round to nearest
+
+    assign result_no_sign_rounded = (tie_to_even | round_nearest) ? (result_no_sign + 1) : result_no_sign;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     // In case the product is negative, take 2's complement of everything but the sign
     logic [NBITS-2:0] signed_result_no_sign;
-    assign signed_result_no_sign = in.sgn ? -result_no_sign[NBITS-2:0] : result_no_sign[NBITS-2:0];
+    assign signed_result_no_sign = in.sgn ? -result_no_sign_rounded[NBITS-2:0] : result_no_sign_rounded[NBITS-2:0];
 
     // Final output
     assign result = (in.zero | in.inf) ? {in.inf, {NBITS-1{1'b0}}} : {in.sgn, signed_result_no_sign[NBITS-2:0]};

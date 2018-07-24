@@ -7,12 +7,12 @@
 
 import posit_defines::*;
 
-module positadd_4_raw (clk, in1, in2, start, result, done);
+module positadd_4_raw (clk, in1, in2, start, result, done, truncated);
 
     input wire clk, start;
     input wire [POSIT_SERIALIZED_WIDTH_ES2-1:0] in1, in2;
     output wire [POSIT_SERIALIZED_WIDTH_SUM_ES2-1:0] result;
-    output wire done;
+    output wire done, truncated;
 
 
     //   ___
@@ -114,6 +114,9 @@ module positadd_4_raw (clk, in1, in2, start, result, done);
         .c(r1_low_fraction_shifted)
     );
 
+    logic r1_truncated_after_equalizing;
+    assign r1_truncated_after_equalizing = |r1_low_fraction_shifted[ABITS-1:0];
+
     // Add the fractions
     logic unsigned [ABITS:0] r1_fraction_sum_raw, r1_fraction_sum_raw_add, r1_fraction_sum_raw_sub;
 
@@ -134,6 +137,7 @@ module positadd_4_raw (clk, in1, in2, start, result, done);
     value_sum r2_sum;
     logic unsigned [ABITS:0] r2_fraction_sum_raw;
     logic [4:0] r2_shift_amount_hiddenbit_out, r2_hidden_pos;
+    logic r2_truncated_after_equalizing;
 
     always @(posedge clk)
     begin
@@ -142,6 +146,8 @@ module positadd_4_raw (clk, in1, in2, start, result, done);
         r2_hi <= r1_hi;
         r2_low <= r1_low;
         r2_fraction_sum_raw <= r1_fraction_sum_raw;
+
+        r2_truncated_after_equalizing <= r1_truncated_after_equalizing;
     end
 
     // Result normalization: shift until normalized (and fix the sign)
@@ -184,11 +190,13 @@ module positadd_4_raw (clk, in1, in2, start, result, done);
     // |____/
     logic r3_start;
     value_sum r3_sum;
+    logic r3_truncated_after_equalizing;
 
     always @(posedge clk)
     begin
         r3_start <= r2_start;
         r3_sum <= r2_sum;
+        r3_truncated_after_equalizing <= r2_truncated_after_equalizing;
     end
 
     // Final output
@@ -202,5 +210,6 @@ module positadd_4_raw (clk, in1, in2, start, result, done);
     assign result_sum.scale = r3_sum.scale;
 
     assign result = {result_sum.sgn, result_sum.scale, result_sum.fraction, result_sum.inf, result_sum.zero};
+    assign truncated = r3_truncated_after_equalizing;
 
 endmodule

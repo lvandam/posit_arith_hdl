@@ -7,12 +7,12 @@
 
 import posit_defines_es3::*;
 
-module positadd_8_raw_es3 (clk, in1, in2, start, result, done);
+module positadd_8_raw_es3 (clk, in1, in2, start, result, done, truncated);
 
     input wire clk, start;
     input wire [POSIT_SERIALIZED_WIDTH_ES3-1:0] in1, in2;
     output wire [POSIT_SERIALIZED_WIDTH_SUM_ES3-1:0] result;
-    output wire done;
+    output wire done, truncated;
 
     //   ___
     //  / _ \
@@ -137,6 +137,9 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done);
     assign r1b_fraction_sum_raw_sub = {~r1b_hi.zero, r1b_hi.fraction, {2{1'b0}}} - r1b_low_fraction_shifted[2*ABITS-4:ABITS-2];
     assign r1b_fraction_sum_raw = r1b_operation ? r1b_fraction_sum_raw_add : r1b_fraction_sum_raw_sub;
 
+    logic r1b_truncated_after_equalizing;
+    assign r1b_truncated_after_equalizing = |r1b_low_fraction_shifted[ABITS-1:0];
+
     assign r1b_zero = r1b_hi.zero & r1b_low.zero;
     assign r1b_inf = r1b_hi.inf | r1b_low.inf;
     assign r1b_sgn = r1b_hi.sgn;
@@ -155,6 +158,7 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done);
     logic r2_zero, r2_inf, r2_sgn;
     logic signed [8:0] r2_scale;
     logic unsigned [ABITS-1:0] r2_fraction_sum_raw;
+    logic r2_truncated_after_equalizing;
 
     always @(posedge clk)
     begin
@@ -165,6 +169,7 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done);
         r2_sgn <= r1b_sgn;
         r2_scale <= r1b_scale;
         r2_fraction_sum_raw <= r1b_fraction_sum_raw;
+        r2_truncated_after_equalizing <= r1b_truncated_after_equalizing;
     end
 
     // Result normalization: shift until normalized (and fix the sign)
@@ -188,6 +193,7 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done);
     logic r2b_start;
 
     value_sum r2b_sum;
+    logic r2b_truncated_after_equalizing;
     logic unsigned [ABITS-1:0] r2b_fraction_sum_raw;
     logic r2b_zero, r2b_inf, r2b_sgn;
     logic signed [8:0] r2b_scale;
@@ -203,6 +209,7 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done);
         r2b_scale <= r2_scale;
         r2b_fraction_sum_raw <= r2_fraction_sum_raw;
         r2b_hidden_pos <= r2_hidden_pos;
+        r2b_truncated_after_equalizing <= r2_truncated_after_equalizing;
     end
 
     logic signed [8:0] r2b_scale_sum;
@@ -223,14 +230,16 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done);
     value_sum r3_sum;
     logic unsigned [ABITS-1:0] r3_fraction_sum_raw;
     logic [4:0] r3_hidden_pos;
+    logic r3_truncated_after_equalizing;
 
     always @(posedge clk)
     begin
         r3_start <= r2b_start;
-        
+
         r3_sum <= r2b_sum;
         r3_fraction_sum_raw <= r2b_fraction_sum_raw;
         r3_hidden_pos <= r2b_hidden_pos;
+        r3_truncated_after_equalizing <= r2b_truncated_after_equalizing;
     end
 
     logic [4:0] r3_shift_amount_hiddenbit_out;
@@ -246,6 +255,7 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done);
     value_sum r3b_sum;
     logic unsigned [ABITS-1:0] r3b_fraction_sum_raw;
     logic [4:0] r3b_shift_amount_hiddenbit_out;
+    logic r3b_truncated_after_equalizing;
 
     always @(posedge clk)
     begin
@@ -253,6 +263,7 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done);
         r3b_sum <= r3_sum;
         r3b_fraction_sum_raw <= r3_fraction_sum_raw;
         r3b_shift_amount_hiddenbit_out <= r3_shift_amount_hiddenbit_out;
+        r3b_truncated_after_equalizing <= r3_truncated_after_equalizing;
     end
 
     // Normalize the sum output (shift left)
@@ -275,12 +286,14 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done);
     //   /_/     /_/
     logic r99_start;
     value_sum r99_sum;
+    logic r99_truncated_after_equalizing;
 
     always @(posedge clk)
     begin
         r99_start <= r3b_start;
         r99_sum <= r3b_sum;
         r99_sum.fraction <= r3b_fraction_sum_normalized;
+        r99_truncated_after_equalizing <= r3b_truncated_after_equalizing;
     end
 
     // Final output
@@ -293,7 +306,7 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done);
     assign result_sum.fraction = r99_sum.fraction;
     assign result_sum.scale = r99_sum.scale;
 
-    // assign result = serialize_sum(result_sum);
     assign result = {result_sum.sgn, result_sum.scale, result_sum.fraction, result_sum.inf, result_sum.zero};
+    assign truncated = r99_truncated_after_equalizing;
 
 endmodule

@@ -68,6 +68,16 @@ package posit_common is
       );
   end component;
 
+  component posit_normalize_prod
+    port (
+      in1       : in  std_logic_vector(POSIT_SERIALIZED_WIDTH_PRODUCT_ES2-1 downto 0);
+      truncated : in  std_logic;
+      result    : out std_logic_vector(31 downto 0);
+      inf       : out std_logic;
+      zero      : out std_logic
+      );
+  end component;
+
   component positadd_8_raw
     port (
       clk       : in  std_logic;
@@ -208,6 +218,16 @@ package posit_common is
   component posit_normalize_accum_es3
     port (
       in1       : in  std_logic_vector(POSIT_SERIALIZED_WIDTH_ACCUM_ES3-1 downto 0);
+      truncated : in  std_logic;
+      result    : out std_logic_vector(31 downto 0);
+      inf       : out std_logic;
+      zero      : out std_logic
+      );
+  end component;
+
+  component posit_normalize_prod_es3
+    port (
+      in1       : in  std_logic_vector(POSIT_SERIALIZED_WIDTH_PRODUCT_ES3-1 downto 0);
       truncated : in  std_logic;
       result    : out std_logic_vector(31 downto 0);
       inf       : out std_logic;

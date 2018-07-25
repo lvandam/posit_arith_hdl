@@ -178,7 +178,7 @@ module positadd_4_raw_es3 (clk, in1, in2, start, result, done, truncated);
 
     logic unsigned [ABITS-1:0] r3_fraction_sum_raw;
     logic [4:0] r3_shift_amount_hiddenbit_out, r3_hidden_pos;
-    logic [ABITS:0] r3_fraction_sum_normalized;
+    logic [ABITS-1:0] r3_fraction_sum_normalized;
     logic r3_truncated_after_equalizing;
 
     always @(posedge clk)

@@ -290,5 +290,6 @@ module positadd_8_raw (clk, in1, in2, start, result, done, truncated);
     assign result_sum.scale = r99_sum.scale;
 
     assign result = {result_sum.sgn, result_sum.scale, result_sum.fraction, result_sum.inf, result_sum.zero};
-    assign truncated = r99_truncated_after_equalizing
+    assign truncated = r99_truncated_after_equalizing;
+    
 endmodule

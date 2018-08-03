@@ -9,15 +9,17 @@ library work;
 
 package posit_common is
 
-  constant POSIT_SERIALIZED_WIDTH_ES2         : natural := 1+8+27+1+1;
-  constant POSIT_SERIALIZED_WIDTH_SUM_ES2     : natural := 1+8+31+1+1;
-  constant POSIT_SERIALIZED_WIDTH_PRODUCT_ES2 : natural := 1+9+56+1+1;
-  constant POSIT_SERIALIZED_WIDTH_ACCUM_ES2   : natural := 1+8+147+1+1;
+  constant POSIT_SERIALIZED_WIDTH_ES2            : natural := 1+8+27+1+1;
+  constant POSIT_SERIALIZED_WIDTH_SUM_ES2        : natural := 1+8+31+1+1;
+  constant POSIT_SERIALIZED_WIDTH_PRODUCT_ES2    : natural := 1+9+56+1+1;
+  constant POSIT_SERIALIZED_WIDTH_ACCUM_ES2      : natural := 1+8+147+1+1;
+  constant POSIT_SERIALIZED_WIDTH_ACCUM_PROD_ES2 : natural := 1+9+147+1+1;
 
-  constant POSIT_SERIALIZED_WIDTH_ES3         : natural := 1+9+26+1+1;
-  constant POSIT_SERIALIZED_WIDTH_SUM_ES3     : natural := 1+9+30+1+1;
-  constant POSIT_SERIALIZED_WIDTH_PRODUCT_ES3 : natural := 1+10+54+1+1;
-  constant POSIT_SERIALIZED_WIDTH_ACCUM_ES3   : natural := 1+9+252+1+1;
+  constant POSIT_SERIALIZED_WIDTH_ES3            : natural := 1+9+26+1+1;
+  constant POSIT_SERIALIZED_WIDTH_SUM_ES3        : natural := 1+9+30+1+1;
+  constant POSIT_SERIALIZED_WIDTH_PRODUCT_ES3    : natural := 1+10+54+1+1;
+  constant POSIT_SERIALIZED_WIDTH_ACCUM_ES3      : natural := 1+9+252+1+1;
+  constant POSIT_SERIALIZED_WIDTH_ACCUM_PROD_ES3 : natural := 1+10+252+1+1;
 
   component posit_normalize_sum
     port (
@@ -71,6 +73,16 @@ package posit_common is
   component posit_normalize_prod
     port (
       in1       : in  std_logic_vector(POSIT_SERIALIZED_WIDTH_PRODUCT_ES2-1 downto 0);
+      truncated : in  std_logic;
+      result    : out std_logic_vector(31 downto 0);
+      inf       : out std_logic;
+      zero      : out std_logic
+      );
+  end component;
+
+  component posit_normalize_accum_prod
+    port (
+      in1       : in  std_logic_vector(POSIT_SERIALIZED_WIDTH_ACCUM_PROD_ES2-1 downto 0);
       truncated : in  std_logic;
       result    : out std_logic_vector(31 downto 0);
       inf       : out std_logic;
@@ -176,6 +188,18 @@ package posit_common is
       );
   end component;
 
+  component positaccum_prod_16_raw
+    port (
+      clk       : in  std_logic;
+      rst       : in  std_logic;
+      in1       : in  std_logic_vector(POSIT_SERIALIZED_WIDTH_PRODUCT_ES2-1 downto 0);
+      start     : in  std_logic;
+      result    : out std_logic_vector(POSIT_SERIALIZED_WIDTH_ACCUM_PROD_ES2-1 downto 0);
+      done      : out std_logic;
+      truncated : out std_logic
+      );
+  end component;
+
   component posit_normalize_sum_es3
     port (
       in1    : in  std_logic_vector(POSIT_SERIALIZED_WIDTH_SUM_ES3-1 downto 0);
@@ -228,6 +252,16 @@ package posit_common is
   component posit_normalize_prod_es3
     port (
       in1       : in  std_logic_vector(POSIT_SERIALIZED_WIDTH_PRODUCT_ES3-1 downto 0);
+      truncated : in  std_logic;
+      result    : out std_logic_vector(31 downto 0);
+      inf       : out std_logic;
+      zero      : out std_logic
+      );
+  end component;
+
+  component posit_normalize_accum_prod_es3
+    port (
+      in1       : in  std_logic_vector(POSIT_SERIALIZED_WIDTH_ACCUM_PROD_ES3-1 downto 0);
       truncated : in  std_logic;
       result    : out std_logic_vector(31 downto 0);
       inf       : out std_logic;
@@ -328,6 +362,18 @@ package posit_common is
       in1       : in  std_logic_vector(POSIT_SERIALIZED_WIDTH_ES3-1 downto 0);
       start     : in  std_logic;
       result    : out std_logic_vector(POSIT_SERIALIZED_WIDTH_ACCUM_ES3-1 downto 0);
+      done      : out std_logic;
+      truncated : out std_logic
+      );
+  end component;
+
+  component positaccum_prod_16_raw_es3
+    port (
+      clk       : in  std_logic;
+      rst       : in  std_logic;
+      in1       : in  std_logic_vector(POSIT_SERIALIZED_WIDTH_PRODUCT_ES3-1 downto 0);
+      start     : in  std_logic;
+      result    : out std_logic_vector(POSIT_SERIALIZED_WIDTH_ACCUM_PROD_ES3-1 downto 0);
       done      : out std_logic;
       truncated : out std_logic
       );

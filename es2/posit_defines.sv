@@ -19,6 +19,7 @@ parameter POSIT_SERIALIZED_WIDTH_ES2 = 1+8+FBITS+1+1;
 parameter POSIT_SERIALIZED_WIDTH_SUM_ES2 = 1+8+ABITS+1+1;
 parameter POSIT_SERIALIZED_WIDTH_PRODUCT_ES2 = 1+9+MBITS+1+1;
 parameter POSIT_SERIALIZED_WIDTH_ACCUM_ES2 = 1+8+147+1+1;
+parameter POSIT_SERIALIZED_WIDTH_ACCUM_PROD_ES2 = 1+9+147+1+1;
 
 typedef struct {
     logic sgn;                   // 1
@@ -51,5 +52,13 @@ typedef struct {
     logic inf;                         // 1
     logic zero;                        // 1
 } value_accum;
+
+typedef struct {
+    logic sgn;                         // 1
+    logic signed [8:0] scale;          // 9
+    logic [FBITS_ACCUM-1:0] fraction;  // 151
+    logic inf;                         // 1
+    logic zero;                        // 1
+} value_accum_prod;
 
 endpackage : posit_defines

@@ -38,15 +38,15 @@ module positadd_8_es3 (clk, in1, in2, start, result, inf, zero, done);
 
     // Extract posit characteristics, among others the regime & exponent scales
     posit_extract_es3 a_extract (
-        .in(r0_in1),
-        .abs(r0_in1_abs),
-        .out(r0_a)
+        .in1(r0_in1),
+        .absolute(r0_in1_abs),
+        .result(r0_a)
     );
 
     posit_extract_es3 b_extract (
-        .in(r0_in2),
-        .abs(r0_in2_abs),
-        .out(r0_b)
+        .in1(r0_in2),
+        .absolute(r0_in2_abs),
+        .result(r0_b)
     );
 
     value r0_low, r0_hi;

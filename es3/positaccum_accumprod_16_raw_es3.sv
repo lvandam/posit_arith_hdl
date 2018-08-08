@@ -1,20 +1,20 @@
 // Laurens van Dam
 // Delft University of Technology
-// July 2018
+// August 2018
 
 `timescale 1ns / 1ps
 `default_nettype wire
 
 import posit_defines_es3::*;
 
-module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
+module positaccum_accumprod_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
 
     input wire clk, rst, start;
-    input wire [POSIT_SERIALIZED_WIDTH_ES3-1:0] in1;
-    output wire [POSIT_SERIALIZED_WIDTH_ACCUM_ES3-1:0] result;
+    input wire [POSIT_SERIALIZED_WIDTH_ACCUM_PROD_ES3-1:0] in1;
+    output wire [POSIT_SERIALIZED_WIDTH_ACCUM_PROD_ES3-1:0] result;
     output wire done, truncated;
 
-    value_accum out_accum;
+    value_accum_prod out_accum;
 
     //   ___
     //  / _ \
@@ -24,7 +24,7 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
     //  \___/
     logic r0_start;
 
-    value_accum r0_a, r0_accum;
+    value_accum_prod r0_a, r0_accum;
     logic r0_operation;
 
     always @(posedge clk, posedge rst)
@@ -39,9 +39,9 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
         end
         else
         begin
-            r0_a.sgn <= in1[37];
-            r0_a.scale <= in1[36:28];
-            r0_a.fraction <= {in1[27:2], {FBITS_ACCUM-FBITS{1'b0}}};
+            r0_a.sgn <= in1[264];
+            r0_a.scale <= in1[263:254];
+            r0_a.fraction <= in1[253:2];
             r0_a.inf <= in1[1];
             r0_a.zero <= in1[0];
         end
@@ -62,7 +62,7 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
         end
     end
 
-    value_accum r0_low, r0_hi;
+    value_accum_prod r0_low, r0_hi;
 
     logic r0_a_lt_b; // A larger than B
     assign r0_a_lt_b = {r0_a.scale, r0_a.fraction} >= {r0_accum.scale, r0_accum.fraction} ? '1 : '0;
@@ -80,7 +80,7 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
     //  |_|
     logic r1_start;
 
-    value_accum r1_low, r1_hi;
+    value_accum_prod r1_low, r1_hi;
 
     logic r1_operation;
 
@@ -116,7 +116,7 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
 
     // Difference in scales (regime and exponent)
     // Amount the smaller input has to be shifted (everything of the scale difference that the regime cannot cover)
-    logic unsigned [7:0] r1_scale_diff;
+    logic unsigned [8:0] r1_scale_diff;
     assign r1_scale_diff = r1_hi.scale - r1_low.scale; // TODO this is dirty
 
 
@@ -127,8 +127,8 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
     //  | |
     //  |_| AA
     logic r1aa_start, r1aa_operation;
-    value_accum r1aa_low, r1aa_hi;
-    logic unsigned [7:0] r1aa_scale_diff;
+    value_accum_prod r1aa_low, r1aa_hi;
+    logic unsigned [8:0] r1aa_scale_diff;
 
     always @(posedge clk, posedge rst)
     begin
@@ -167,7 +167,7 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
     logic [2*ABITS_ACCUM-1:0] r1aa_low_fraction_shifted; // TODO We lose some bits here
     shift_right #(
         .N(2*ABITS_ACCUM),
-        .S(8)
+        .S(9)
     ) scale_matching_shift (
         .a({~r1aa_low.zero, r1aa_low.fraction, {ABITS_ACCUM+3{1'b0}}}),
         .b(r1aa_scale_diff), // Shift to right by scale difference
@@ -185,7 +185,7 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
     //  | |  / ____ \
     //  |_| /_/    \_\
     logic r1a_start, r1a_operation;
-    value_accum r1a_low, r1a_hi;
+    value_accum_prod r1a_low, r1a_hi;
     logic [2*ABITS_ACCUM-1:0] r1a_low_fraction_shifted; // TODO We lose some bits here
     logic unsigned [ABITS_ACCUM:0] r1a_fraction_sum_raw;
     logic r1a_truncated_after_equalizing;
@@ -243,10 +243,10 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
     //  |_| |____/
     logic r1b_start;
 
-    value_accum r1b_low, r1b_hi;
+    value_accum_prod r1b_low, r1b_hi;
     logic unsigned [ABITS_ACCUM:0] r1b_fraction_sum_raw;
 
-    value_accum r1b_lowShiftReg[7:0], r1b_hiShiftReg[7:0];
+    value_accum_prod r1b_lowShiftReg[7:0], r1b_hiShiftReg[7:0];
     logic [7:0] r1b_startShiftReg, r1b_truncated_after_equalizingShiftReg;
     logic r1b_truncated_after_equalizing;
     integer i;
@@ -318,7 +318,7 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
     // |____| AA
     logic r2aa_start;
 
-    value_accum r2aa_sum, r2aa_hi, r2aa_low;
+    value_accum_prod r2aa_sum, r2aa_hi, r2aa_low;
     logic unsigned [ABITS_ACCUM:0] r2aa_fraction_sum_raw;
     logic [8:0] r2aa_hidden_pos;
     logic r2aa_truncated_after_equalizing;
@@ -357,7 +357,7 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
         end
     end
 
-    logic signed [8:0] r2aa_scale_sum;
+    logic signed [9:0] r2aa_scale_sum;
     assign r2aa_scale_sum = r2aa_fraction_sum_raw[ABITS_ACCUM] ? (r2aa_hi.scale + 1) : ((~r2aa_fraction_sum_raw[ABITS_ACCUM-1] & ~(r2aa_hi.zero & r2aa_low.zero)) ? (r2aa_hi.scale - r2aa_hidden_pos + 1) : r2aa_hi.scale);
     assign r2aa_sum.sgn = r2aa_hi.sgn;
     assign r2aa_sum.scale = r2aa_scale_sum;
@@ -373,7 +373,7 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
     // |____| A
     logic r2a_start;
 
-    value_accum r2a_sum;
+    value_accum_prod r2a_sum;
     logic unsigned [ABITS_ACCUM:0] r2a_fraction_sum_raw;
     logic [9:0] r2a_shift_amount_hiddenbit_out;
     logic [8:0] r2a_hidden_pos;
@@ -392,6 +392,7 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
 
             r2a_fraction_sum_raw <= '0;
             r2a_truncated_after_equalizing <= '0;
+            r2a_hidden_pos <= '0;
         end
         else
         begin
@@ -418,7 +419,7 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
     // |____|
     logic r2_start;
 
-    value_accum r2_sum;
+    value_accum_prod r2_sum;
     logic unsigned [ABITS_ACCUM:0] r2_fraction_sum_raw;
     logic [9:0] r2_shift_amount_hiddenbit_out;
     logic r2_truncated_after_equalizing;
@@ -474,7 +475,7 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
     //    / /     / /
     //   /_/     /_/
     logic r99_start;
-    value_accum r99_sum;
+    value_accum_prod r99_sum;
     logic r99_truncated_after_equalizing;
 
     always @(posedge clk, posedge rst)

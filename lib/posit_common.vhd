@@ -200,6 +200,30 @@ package posit_common is
       );
   end component;
 
+  component positaccum_accum_16_raw
+    port (
+      clk       : in  std_logic;
+      rst       : in  std_logic;
+      in1       : in  std_logic_vector(POSIT_SERIALIZED_WIDTH_ACCUM_ES2-1 downto 0);
+      start     : in  std_logic;
+      result    : out std_logic_vector(POSIT_SERIALIZED_WIDTH_ACCUM_ES2-1 downto 0);
+      done      : out std_logic;
+      truncated : out std_logic
+      );
+  end component;
+
+  component positaccum_accumprod_16_raw
+    port (
+      clk       : in  std_logic;
+      rst       : in  std_logic;
+      in1       : in  std_logic_vector(POSIT_SERIALIZED_WIDTH_ACCUM_PROD_ES2-1 downto 0);
+      start     : in  std_logic;
+      result    : out std_logic_vector(POSIT_SERIALIZED_WIDTH_ACCUM_PROD_ES2-1 downto 0);
+      done      : out std_logic;
+      truncated : out std_logic
+      );
+  end component;
+
   component posit_normalize_sum_es3
     port (
       in1    : in  std_logic_vector(POSIT_SERIALIZED_WIDTH_SUM_ES3-1 downto 0);
@@ -372,6 +396,30 @@ package posit_common is
       clk       : in  std_logic;
       rst       : in  std_logic;
       in1       : in  std_logic_vector(POSIT_SERIALIZED_WIDTH_PRODUCT_ES3-1 downto 0);
+      start     : in  std_logic;
+      result    : out std_logic_vector(POSIT_SERIALIZED_WIDTH_ACCUM_PROD_ES3-1 downto 0);
+      done      : out std_logic;
+      truncated : out std_logic
+      );
+  end component;
+
+  component positaccum_accum_16_raw_es3
+    port (
+      clk       : in  std_logic;
+      rst       : in  std_logic;
+      in1       : in  std_logic_vector(POSIT_SERIALIZED_WIDTH_ACCUM_ES3-1 downto 0);
+      start     : in  std_logic;
+      result    : out std_logic_vector(POSIT_SERIALIZED_WIDTH_ACCUM_ES3-1 downto 0);
+      done      : out std_logic;
+      truncated : out std_logic
+      );
+  end component;
+
+  component positaccum_accumprod_16_raw_es3
+    port (
+      clk       : in  std_logic;
+      rst       : in  std_logic;
+      in1       : in  std_logic_vector(POSIT_SERIALIZED_WIDTH_ACCUM_PROD_ES3-1 downto 0);
       start     : in  std_logic;
       result    : out std_logic_vector(POSIT_SERIALIZED_WIDTH_ACCUM_PROD_ES3-1 downto 0);
       done      : out std_logic;

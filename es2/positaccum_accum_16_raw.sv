@@ -1,17 +1,17 @@
 // Laurens van Dam
 // Delft University of Technology
-// July 2018
+// August 2018
 
 `timescale 1ns / 1ps
 `default_nettype wire
 
-import posit_defines_es3::*;
+import posit_defines::*;
 
-module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
+module positaccum_accum_16_raw (clk, rst, in1, start, result, done, truncated);
 
     input wire clk, rst, start;
-    input wire [POSIT_SERIALIZED_WIDTH_ES3-1:0] in1;
-    output wire [POSIT_SERIALIZED_WIDTH_ACCUM_ES3-1:0] result;
+    input wire [POSIT_SERIALIZED_WIDTH_ACCUM_ES2-1:0] in1;
+    output wire [POSIT_SERIALIZED_WIDTH_ACCUM_ES2-1:0] result;
     output wire done, truncated;
 
     value_accum out_accum;
@@ -39,9 +39,9 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
         end
         else
         begin
-            r0_a.sgn <= in1[37];
-            r0_a.scale <= in1[36:28];
-            r0_a.fraction <= {in1[27:2], {FBITS_ACCUM-FBITS{1'b0}}};
+            r0_a.sgn <= in1[157];
+            r0_a.scale <= in1[156:149];
+            r0_a.fraction <= in1[148:2];
             r0_a.inf <= in1[1];
             r0_a.zero <= in1[0];
         end
@@ -225,7 +225,7 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
     end
 
     // Add the fractions
-    ADDSUB256_8 frac_add_sub (
+    ADDSUB151_8 frac_add_sub (
         .CLK(clk),
         .SCLR(rst),
         .ADD(r1a_operation),
@@ -301,11 +301,11 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
 
     // Result normalization: shift until normalized (and fix the sign)
     // Find the hidden bit (leading zero counter)
-    logic [8:0] r1b_hidden_pos;
+    logic [7:0] r1b_hidden_pos;
     LOD_N #(
-        .N(512)
+        .N(256)
     ) hidden_bit_counter(
-        .in({r1b_fraction_sum_raw[ABITS_ACCUM:0], {512-ABITS_ACCUM-1{1'b0}}}),
+        .in({r1b_fraction_sum_raw[ABITS_ACCUM:0], {256-ABITS_ACCUM-1{1'b0}}}),
         .out(r1b_hidden_pos)
     );
 
@@ -320,7 +320,7 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
 
     value_accum r2aa_sum, r2aa_hi, r2aa_low;
     logic unsigned [ABITS_ACCUM:0] r2aa_fraction_sum_raw;
-    logic [8:0] r2aa_hidden_pos;
+    logic [7:0] r2aa_hidden_pos;
     logic r2aa_truncated_after_equalizing;
 
     always @(posedge clk, posedge rst)
@@ -328,6 +328,7 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
         if(rst)
         begin
             r2aa_start <= '0;
+            r2aa_fraction_sum_raw <= '0;
 
             r2aa_hi.sgn = '0;
             r2aa_hi.scale = '0;
@@ -338,8 +339,6 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
             r2aa_low.inf = '0;
             r2aa_low.zero = '1;
 
-            r2aa_fraction_sum_raw <= '0;
-            r2aa_hidden_pos <= '0;
             r2aa_truncated_after_equalizing <= '0;
         end
         else
@@ -357,7 +356,7 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
         end
     end
 
-    logic signed [8:0] r2aa_scale_sum;
+    logic signed [7:0] r2aa_scale_sum;
     assign r2aa_scale_sum = r2aa_fraction_sum_raw[ABITS_ACCUM] ? (r2aa_hi.scale + 1) : ((~r2aa_fraction_sum_raw[ABITS_ACCUM-1] & ~(r2aa_hi.zero & r2aa_low.zero)) ? (r2aa_hi.scale - r2aa_hidden_pos + 1) : r2aa_hi.scale);
     assign r2aa_sum.sgn = r2aa_hi.sgn;
     assign r2aa_sum.scale = r2aa_scale_sum;
@@ -375,8 +374,8 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
 
     value_accum r2a_sum;
     logic unsigned [ABITS_ACCUM:0] r2a_fraction_sum_raw;
-    logic [9:0] r2a_shift_amount_hiddenbit_out;
-    logic [8:0] r2a_hidden_pos;
+    logic [7:0] r2a_shift_amount_hiddenbit_out;
+    logic [7:0] r2a_hidden_pos;
     logic r2a_truncated_after_equalizing;
 
     always @(posedge clk, posedge rst)
@@ -392,6 +391,7 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
 
             r2a_fraction_sum_raw <= '0;
             r2a_truncated_after_equalizing <= '0;
+            r2a_hidden_pos <= '0;
         end
         else
         begin
@@ -420,7 +420,7 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
 
     value_accum r2_sum;
     logic unsigned [ABITS_ACCUM:0] r2_fraction_sum_raw;
-    logic [9:0] r2_shift_amount_hiddenbit_out;
+    logic [7:0] r2_shift_amount_hiddenbit_out;
     logic r2_truncated_after_equalizing;
 
     always @(posedge clk, posedge rst)
@@ -457,7 +457,7 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
     logic [ABITS_ACCUM:0] r2_fraction_sum_normalized;
     shift_left #(
         .N(ABITS_ACCUM+1),
-        .S(10) // The hidden bit is shifted out of range, our sum becomes 0 (when truncated)
+        .S(8) // The hidden bit is shifted out of range, our sum becomes 0 (when truncated)
     ) ls (
         .a(r2_fraction_sum_raw[ABITS_ACCUM:0]),
         .b(r2_shift_amount_hiddenbit_out),

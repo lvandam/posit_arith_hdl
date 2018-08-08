@@ -1,16 +1,16 @@
 // Laurens van Dam
 // Delft University of Technology
-// July 2018
+// August 2018
 
 `timescale 1ns / 1ps
 `default_nettype wire
 
 import posit_defines_es3::*;
 
-module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
+module positaccum_accum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
 
     input wire clk, rst, start;
-    input wire [POSIT_SERIALIZED_WIDTH_ES3-1:0] in1;
+    input wire [POSIT_SERIALIZED_WIDTH_ACCUM_ES3-1:0] in1;
     output wire [POSIT_SERIALIZED_WIDTH_ACCUM_ES3-1:0] result;
     output wire done, truncated;
 
@@ -39,9 +39,9 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
         end
         else
         begin
-            r0_a.sgn <= in1[37];
-            r0_a.scale <= in1[36:28];
-            r0_a.fraction <= {in1[27:2], {FBITS_ACCUM-FBITS{1'b0}}};
+            r0_a.sgn <= in1[263];
+            r0_a.scale <= in1[262:254];
+            r0_a.fraction <= in1[253:2];
             r0_a.inf <= in1[1];
             r0_a.zero <= in1[0];
         end

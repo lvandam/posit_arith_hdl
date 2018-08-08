@@ -35,7 +35,7 @@ module positaccum_prod_16_raw_es3 (clk, rst, in1, start, result, done, truncated
             r0_a.scale <= '0;
             r0_a.fraction <= '0;
             r0_a.inf <= '0;
-            r0_a.zero <= in1[0];
+            r0_a.zero <= '1;
         end
         else
         begin
@@ -328,7 +328,6 @@ module positaccum_prod_16_raw_es3 (clk, rst, in1, start, result, done, truncated
         if(rst)
         begin
             r2aa_start <= '0;
-            r2aa_fraction_sum_raw <= '0;
 
             r2aa_hi.sgn = '0;
             r2aa_hi.scale = '0;
@@ -339,6 +338,8 @@ module positaccum_prod_16_raw_es3 (clk, rst, in1, start, result, done, truncated
             r2aa_low.inf = '0;
             r2aa_low.zero = '1;
 
+            r2aa_fraction_sum_raw <= '0;
+            r2aa_hidden_pos <= '0;
             r2aa_truncated_after_equalizing <= '0;
         end
         else

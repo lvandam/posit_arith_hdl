@@ -65,7 +65,7 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
     value_accum r0_low, r0_hi;
 
     logic r0_a_lt_b; // A larger than B
-    assign r0_a_lt_b = {r0_a.scale, r0_a.fraction} >= {r0_accum.scale, r0_accum.fraction} ? '1 : '0;
+    assign r0_a_lt_b = (r0_a.scale > r0_accum.scale) ? '1 : (r0_a.scale < r0_accum.scale ? '0 : (r0_a.fraction >= r0_accum.fraction ? '1 : '0));
 
     assign r0_operation = r0_a.sgn ~^ r0_accum.sgn; // 1 = equal signs = add, 0 = unequal signs = subtract
     assign r0_low = r0_a_lt_b ? r0_accum : r0_a;
@@ -116,7 +116,7 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
 
     // Difference in scales (regime and exponent)
     // Amount the smaller input has to be shifted (everything of the scale difference that the regime cannot cover)
-    logic unsigned [7:0] r1_scale_diff;
+    logic unsigned [8:0] r1_scale_diff;
     assign r1_scale_diff = r1_hi.scale - r1_low.scale; // TODO this is dirty
 
 
@@ -128,7 +128,7 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
     //  |_| AA
     logic r1aa_start, r1aa_operation;
     value_accum r1aa_low, r1aa_hi;
-    logic unsigned [7:0] r1aa_scale_diff;
+    logic unsigned [8:0] r1aa_scale_diff;
 
     always @(posedge clk, posedge rst)
     begin
@@ -167,7 +167,7 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
     logic [2*ABITS_ACCUM-1:0] r1aa_low_fraction_shifted; // TODO We lose some bits here
     shift_right #(
         .N(2*ABITS_ACCUM),
-        .S(8)
+        .S(9)
     ) scale_matching_shift (
         .a({~r1aa_low.zero, r1aa_low.fraction, {ABITS_ACCUM+3{1'b0}}}),
         .b(r1aa_scale_diff), // Shift to right by scale difference

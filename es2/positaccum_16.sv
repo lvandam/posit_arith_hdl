@@ -58,7 +58,7 @@ module positaccum_16 (clk, rst, in1, start, result, inf, zero, done);
     value_accum r0_low, r0_hi;
 
     logic r0_a_lt_b; // A larger than B
-    assign r0_a_lt_b = r0_a.scale >= r0_accum.scale ? '1 : '0;
+    assign r0_a_lt_b = (r0_a.scale > r0_accum.scale) ? '1 : (r0_a.scale < r0_accum.scale ? '0 : (r0_a.fraction >= r0_accum.fraction ? '1 : '0));
 
     assign r0_operation = r0_a.sgn ~^ r0_accum.sgn; // 1 = equal signs = add, 0 = unequal signs = subtract
     assign r0_low = r0_a_lt_b ? r0_accum : r0_a;

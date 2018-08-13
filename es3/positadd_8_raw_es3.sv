@@ -66,7 +66,7 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done, truncated);
     value r0_low, r0_hi;
 
     logic r0_a_lt_b; // A larger than B
-    assign r0_a_lt_b = (r0_a.scale > r0_b.scale) ? '1 : (r0_a.scale < r0_b.scale ? '0 : (r0_a.fraction >= r0_b.fraction ? '1 : '0));
+    assign r0_a_lt_b = r0_b.zero ? '1 : (r0_a.zero ? '0 : ((r0_a.scale > r0_b.scale) ? '1 : (r0_a.scale < r0_b.scale ? '0 : (r0_a.fraction >= r0_b.fraction ? '1 : '0))));
 
     assign r0_low = r0_a_lt_b ? r0_b : r0_a;
     assign r0_hi = r0_a_lt_b ? r0_a : r0_b;
@@ -269,7 +269,7 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done, truncated);
     // Normalize the sum output (shift left)
     logic [ABITS:0] r3b_fraction_sum_normalized;
     shift_left #(
-        .N(ABITS-0),
+        .N(ABITS),
         .S(5)
     ) ls (
         .a(r3b_fraction_sum_raw[ABITS-1:0]),
@@ -292,7 +292,7 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done, truncated);
     begin
         r99_start <= r3b_start;
         r99_sum <= r3b_sum;
-        r99_sum.fraction <= r3b_fraction_sum_normalized;
+        r99_sum.fraction <= r3b_fraction_sum_normalized[ABITS:1];
         r99_truncated_after_equalizing <= r3b_truncated_after_equalizing;
     end
 

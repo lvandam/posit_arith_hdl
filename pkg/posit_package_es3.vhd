@@ -22,6 +22,9 @@ package posit_package is
   subtype value_sum is std_logic_vector(POSIT_SERIALIZED_WIDTH_SUM_ES3-1 downto 0);
   constant value_sum_empty : value_sum := (POSIT_SERIALIZED_WIDTH_SUM_ES3-1 downto 1 => '0', others => '1');
 
+  subtype value_prod_sum is std_logic_vector(POSIT_SERIALIZED_WIDTH_SUM_PRODUCT_ES3-1 downto 0);
+  constant value_prod_sum_empty : value_prod_sum := (POSIT_SERIALIZED_WIDTH_SUM_PRODUCT_ES3-1 downto 1 => '0', others => '1');
+
   subtype value_product is std_logic_vector(POSIT_SERIALIZED_WIDTH_PRODUCT_ES3-1 downto 0);
   constant value_product_empty : value_product := (POSIT_SERIALIZED_WIDTH_PRODUCT_ES3-1 downto 1 => '0', others => '1');
 
@@ -31,6 +34,7 @@ package posit_package is
   function prod2val (a : in value_product) return value;
   function sum2val (a  : in value_sum) return value;
   function accum2val (a : in value_accum) return value;
+  function prodsum2val (a : in value_prod_sum) return value;
 
 end package;
 
@@ -72,6 +76,25 @@ package body posit_package is
     assert signed(tmp(36 downto 28)) = signed(a(40 downto 32)) report "Scale loss (sum2val), val=" & integer'image(to_integer(signed(tmp(36 downto 28)))) & ", sum=" & integer'image(to_integer(signed(a(40 downto 32)))) severity error;
     return tmp;
   end function sum2val;
+
+    -- Product Sum layout:
+    -- 71 1       sign
+    -- 70 10       scale
+    -- 60 58     fraction
+    -- 2   1       inf
+    -- 1   1       zero
+    -- 0
+    function prodsum2val (a : in value_prod_sum) return value is
+      variable tmp : std_logic_vector(POSIT_SERIALIZED_WIDTH_ES3-1 downto 0);
+    begin
+      tmp(0)            := a(0);
+      tmp(1)            := a(1);
+      tmp(27 downto 2)  := a(59 downto 34);
+      tmp(36 downto 28) := a(68 downto 60);
+      tmp(37)           := a(70);
+      assert signed(tmp(36 downto 28)) = signed(a(68 downto 60)) report "Scale loss (prodsum2val), val=" & integer'image(to_integer(signed(tmp(36 downto 28)))) & ", sum=" & integer'image(to_integer(signed(a(68 downto 60)))) severity error;
+      return tmp;
+    end function prodsum2val;
 
   -- Accum layout:
   -- 264 1       sign

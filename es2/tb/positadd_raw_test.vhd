@@ -115,6 +115,13 @@ begin
     done   => open
     );
 
+  normalize_sum : posit_normalize port map (
+    in1    => sum2val(posit_sum),
+    result => posit_sum_real,
+    inf    => open,
+    zero   => open
+    );
+
   mul : positmult_4_raw_sumval port map (
     clk    => clk,
     in1    => posit_sum,

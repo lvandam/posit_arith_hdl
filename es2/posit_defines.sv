@@ -6,10 +6,11 @@ package posit_defines;
 
 parameter NBITS = 32;
 parameter ES = 2;
-parameter FBITS = NBITS - 3 - ES; // Size of fraction bits
-parameter FHBITS = FBITS + 1; // Size of fraction + hidden bit
-parameter MBITS = 2 *  FHBITS; // Size of multiplier output
-parameter ABITS = FBITS + 4; // Size of addend
+parameter FBITS = NBITS - 3 - ES; // Size of fraction bits // 27
+parameter FHBITS = FBITS + 1; // Size of fraction + hidden bit // 28
+parameter MBITS = 2 *  FHBITS; // Size of multiplier output // 56
+parameter ABITS = FBITS + 4; // Size of addend // 31
+parameter AMBITS = MBITS + 4; // Size of product addend // 60
 
 parameter MAX_FRACTION_SHIFT = (1 << ES) * (NBITS - 2);
 parameter FBITS_ACCUM = MAX_FRACTION_SHIFT + FBITS; // 147
@@ -18,6 +19,7 @@ parameter ABITS_ACCUM = FBITS_ACCUM + 4;
 parameter POSIT_SERIALIZED_WIDTH_ES2 = 1+8+FBITS+1+1;
 parameter POSIT_SERIALIZED_WIDTH_SUM_ES2 = 1+8+ABITS+1+1;
 parameter POSIT_SERIALIZED_WIDTH_PRODUCT_ES2 = 1+9+MBITS+1+1;
+parameter POSIT_SERIALIZED_WIDTH_SUM_PRODUCT_ES2 = 1+9+AMBITS+1+1;
 parameter POSIT_SERIALIZED_WIDTH_ACCUM_ES2 = 1+8+147+1+1;
 parameter POSIT_SERIALIZED_WIDTH_ACCUM_PROD_ES2 = 1+9+147+1+1;
 
@@ -44,6 +46,14 @@ typedef struct {
     logic inf;                   // 1
     logic zero;                  // 1
 } value_sum; // 42
+
+typedef struct {
+    logic sgn;                   // 1
+    logic signed [8:0] scale;    // 9
+    logic [AMBITS-1:0] fraction;  // 60
+    logic inf;                   // 1
+    logic zero;                  // 1
+} value_prod_sum; // 72
 
 typedef struct {
     logic sgn;                         // 1

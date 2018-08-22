@@ -27,8 +27,32 @@ module posit_normalize (in1, truncated, result, inf, zero);
     logic [ES-1:0] result_exponent;
     assign result_exponent = in.scale % (2 << ES);
 
+    logic [FBITS-1:0] fraction_leftover;//ABITS TODO Laurens
+    logic [6:0] leftover_shift;
+    assign leftover_shift = NBITS - 4 - regime_shift_amount;
+    // Determine all fraction bits that are truncated in the final result
+    shift_left #(
+        .N(FBITS),//ABITS+1), TODO Laurens
+        .S(7)
+    ) fraction_leftover_shift (
+        .a(in.fraction),
+        .b(leftover_shift), // Shift to right by regime value (clip at maximum number of bits)
+        .c(fraction_leftover)
+    );
+
+    logic sticky_bit;
+    assign sticky_bit = truncated | |fraction_leftover[FBITS-2:0]; // Logical OR of all truncated fraction multiplication bits //ABITS TODO Laurens
+
+
+
+
+
+
+
+
+
     logic [28:0] fraction_truncated;
-    assign fraction_truncated = {in.fraction[FBITS-1:0], {29-FBITS{1'b0}}};
+    assign fraction_truncated = {in.fraction[FBITS-1:0], 1'b0, sticky_bit};
 
     logic [2*NBITS-1:0] regime_exp_fraction;
     assign regime_exp_fraction = { {NBITS-1{~in.scale[7]}}, // Regime leading bits
@@ -54,21 +78,11 @@ module posit_normalize (in1, truncated, result, inf, zero);
 
 
 
-    logic [FBITS-1:0] fraction_leftover;//ABITS TODO Laurens
-    logic [6:0] leftover_shift;
-    assign leftover_shift = NBITS - 4 - regime_shift_amount;
-    // Determine all fraction bits that are truncated in the final result
-    shift_left #(
-        .N(FBITS),//ABITS+1), TODO Laurens
-        .S(7)
-    ) fraction_leftover_shift (
-        .a(in.fraction),
-        .b(leftover_shift), // Shift to right by regime value (clip at maximum number of bits)
-        .c(fraction_leftover)
-    );
 
-    logic sticky_bit;
-    assign sticky_bit = truncated | |fraction_leftover[FBITS-2:0]; // Logical OR of all truncated fraction multiplication bits //ABITS TODO Laurens
+
+
+
+
 
     logic bafter;
     assign bafter = fraction_leftover[FBITS-1];//ABITS TODO Laurens
@@ -82,20 +96,6 @@ module posit_normalize (in1, truncated, result, inf, zero);
     assign round_nearest = bafter & sticky_bit; // Value > 0.5: round to nearest
 
     assign result_no_sign_rounded = (tie_to_even | round_nearest) ? (result_no_sign + 1) : result_no_sign;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     // In case the product is negative, take 2's complement of everything but the sign
     logic [NBITS-2:0] signed_result_no_sign;

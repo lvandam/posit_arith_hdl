@@ -135,7 +135,7 @@ module positadd_4_raw_es3 (clk, in1, in2, start, result, done, truncated);
 
     value_sum r2_sum;
     logic unsigned [ABITS:0] r2_fraction_sum_raw;
-    logic [4:0] r2_shift_amount_hiddenbit_out, r2_hidden_pos;
+    logic [4:0] r2_hidden_pos;
     logic r2_truncated_after_equalizing;
     logic signed [8:0] r2_scale_sum;
 
@@ -151,9 +151,9 @@ module positadd_4_raw_es3 (clk, in1, in2, start, result, done, truncated);
     // Result normalization: shift until normalized (and fix the sign)
     // Find the hidden bit (leading zero counter)
     LOD_N #(
-        .N(ABITS+1)
+        .N(32)
     ) hidden_bit_counter(
-        .in({r2_fraction_sum_raw[ABITS:0]}),
+        .in({r2_fraction_sum_raw[ABITS:0], {32-ABITS-1{1'b0}}}),
         .out(r2_hidden_pos)
     );
 

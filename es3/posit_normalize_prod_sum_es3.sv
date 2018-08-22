@@ -7,33 +7,33 @@
 
 import posit_defines_es3::*;
 
-module posit_normalize_accum_prod_es3 (in1, truncated, result, inf, zero);
+module posit_normalize_prod_sum_es3 (in1, truncated, result, inf, zero);
 
-    input wire [POSIT_SERIALIZED_WIDTH_ACCUM_PROD_ES3-1:0] in1;
+    input wire [POSIT_SERIALIZED_WIDTH_SUM_PRODUCT_ES3-1:0] in1;
     input wire truncated;
     output wire [31:0] result;
     output wire inf, zero;
 
-    value_accum_prod in;
-    assign in.sgn = in1[264];
-    assign in.scale = in1[263:254];
-    assign in.fraction = in1[253:2];
+    value_prod_sum in;
+    assign in.sgn = in1[70];
+    assign in.scale = in1[69:60];
+    assign in.fraction = in1[59:2];
     assign in.inf = in1[1];
     assign in.zero = in1[0];
 
-    logic [7:0] regime_shift_amount;
+    logic [8:0] regime_shift_amount;
     assign regime_shift_amount = (in.scale[9] == 0) ? 1 + (in.scale >> ES) : -(in.scale >> ES);
 
     logic [ES-1:0] result_exponent;
     assign result_exponent = in.scale % (2 << ES);
 
-    logic [FBITS_ACCUM-1:0] fraction_leftover;
-    logic [6:0] leftover_shift;
+    logic [63:0] fraction_leftover;
+    logic [8:0] leftover_shift;
     assign leftover_shift = NBITS - ES - 2 - regime_shift_amount;
     // Determine all fraction bits that are truncated in the final result
     shift_left #(
-        .N(FBITS_ACCUM),
-        .S(7)
+        .N(64),
+        .S(9)
     ) fraction_leftover_shift (
         .a(in.fraction),
         .b(leftover_shift), // Shift to right by regime value (clip at maximum number of bits)
@@ -41,10 +41,10 @@ module posit_normalize_accum_prod_es3 (in1, truncated, result, inf, zero);
     );
 
     logic sticky_bit;
-    assign sticky_bit = truncated | |fraction_leftover[FBITS_ACCUM-2:0]; // Logical OR of all truncated fraction multiplication bits
+    assign sticky_bit = truncated | |fraction_leftover[62:0]; // Logical OR of all truncated fraction multiplication bits
 
     logic [27:0] fraction_truncated;
-    assign fraction_truncated = {in.fraction[FBITS_ACCUM-1:FBITS_ACCUM-27], sticky_bit | in.fraction[FBITS_ACCUM-28]};
+    assign fraction_truncated = {in.fraction[AMBITS-1:AMBITS-27], sticky_bit | in.fraction[AMBITS-28]};
 
     logic [2*NBITS-1:0] regime_exp_fraction;
     assign regime_exp_fraction = { {NBITS-1{~in.scale[9]}}, // Regime leading bits
@@ -55,7 +55,7 @@ module posit_normalize_accum_prod_es3 (in1, truncated, result, inf, zero);
     logic [2*NBITS-1:0] exp_fraction_shifted_for_regime;
     shift_right #(
         .N(2*NBITS),
-        .S(8)
+        .S(9)
     ) shift_in_regime (
         .a(regime_exp_fraction), // exponent + fraction bits
         .b(regime_shift_amount), // Shift to right by regime value (clip at maximum number of bits)
@@ -67,7 +67,7 @@ module posit_normalize_accum_prod_es3 (in1, truncated, result, inf, zero);
     assign result_no_sign = exp_fraction_shifted_for_regime[NBITS-1:1];
 
     logic bafter;
-    assign bafter = fraction_leftover[FBITS_ACCUM-1];
+    assign bafter = fraction_leftover[63];
 
     // Perform rounding (based on sticky bit)
     logic blast, tie_to_even, round_nearest;

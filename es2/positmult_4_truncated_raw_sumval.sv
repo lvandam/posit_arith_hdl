@@ -1,19 +1,21 @@
 // Laurens van Dam
 // Delft University of Technology
-// May 2018
+// August 2018
 
 `timescale 1ns / 1ps
 `default_nettype wire
 
-import posit_defines_es3::*;
+import posit_defines::*;
 
-module positmult_4_raw_sumval_es3 (clk, in1, in2, start, result, done);
+module positmult_4_truncated_raw_sumval (clk, in1, in1_truncated, in2, in2_truncated, start, result, done, truncated);
 
     input wire clk, start;
-    input wire [POSIT_SERIALIZED_WIDTH_SUM_ES3-1:0] in1;
-    input wire [POSIT_SERIALIZED_WIDTH_ES3-1:0] in2;
-    output wire [POSIT_SERIALIZED_WIDTH_PRODUCT_ES3-1:0] result;
-    output wire done;
+    input wire [POSIT_SERIALIZED_WIDTH_SUM_ES2-1:0] in1;
+    input wire [POSIT_SERIALIZED_WIDTH_ES2-1:0] in2;
+    input wire in1_truncated, in2_truncated;
+    output wire [POSIT_SERIALIZED_WIDTH_PRODUCT_ES2-1:0] result;
+    output wire done, truncated;
+
 
     //   ___
     //  / _ \
@@ -22,6 +24,7 @@ module positmult_4_raw_sumval_es3 (clk, in1, in2, start, result, done);
     // | |_| |
     //  \___/
     logic r0_start;
+    logic r0_in1_truncated, r0_in2_truncated;
 
     value_sum r0_a, r0_b;
 
@@ -33,15 +36,19 @@ module positmult_4_raw_sumval_es3 (clk, in1, in2, start, result, done);
             r0_a.scale <= '0;
             r0_a.fraction <= '0;
             r0_a.inf <= '0;
-            r0_a.zero <= in1[0];
+            r0_a.zero <= '1;
+
+            r0_in1_truncated <= '0;
         end
         else
         begin
             r0_a.sgn <= in1[41];
-            r0_a.scale <= in1[40:32];
-            r0_a.fraction <= in1[31:2];
+            r0_a.scale <= in1[40:33];
+            r0_a.fraction <= in1[32:2];
             r0_a.inf <= in1[1];
             r0_a.zero <= in1[0];
+
+            r0_in1_truncated <= in1_truncated;
         end
 
         if (in2[0] == 1'b1)
@@ -51,14 +58,18 @@ module positmult_4_raw_sumval_es3 (clk, in1, in2, start, result, done);
             r0_b.fraction <= '0;
             r0_b.inf <= '0;
             r0_b.zero <= in2[0];
+
+            r0_in2_truncated <= '0;
         end
         else
         begin
             r0_b.sgn <= in2[37];
-            r0_b.scale <= in2[36:28];
-            r0_b.fraction <= {in2[27:2], {ABITS-FBITS{1'b0}}};
+            r0_b.scale <= in2[36:29];
+            r0_b.fraction <= {in2[28:2], {ABITS-FBITS{1'b0}}};
             r0_b.inf <= in2[1];
             r0_b.zero <= in2[0];
+
+            r0_in2_truncated <= in2_truncated;
         end
 
         r0_start <= (start === 'x) ? '0 : start;
@@ -74,6 +85,7 @@ module positmult_4_raw_sumval_es3 (clk, in1, in2, start, result, done);
 
     value_sum r1_a, r1_b;
     value_product r1_product;
+    logic r1_truncated;
 
     always @(posedge clk)
     begin
@@ -81,6 +93,8 @@ module positmult_4_raw_sumval_es3 (clk, in1, in2, start, result, done);
 
         r1_a <= r0_a;
         r1_b <= r0_b;
+
+        r1_truncated <= r0_in1_truncated | r0_in2_truncated;
     end
 
     logic [MBITS-1:0] r1_fraction_mult, r1_result_fraction;
@@ -108,12 +122,15 @@ module positmult_4_raw_sumval_es3 (clk, in1, in2, start, result, done);
     // |____|
     logic r2_start;
     value_product r2_product;
+    logic r2_truncated;
 
     always @(posedge clk)
     begin
         r2_start <= r1_start;
         r2_product <= r1_product;
+        r2_truncated <= r1_truncated;
     end
+
 
     //  ____
     // |___ \
@@ -123,18 +140,20 @@ module positmult_4_raw_sumval_es3 (clk, in1, in2, start, result, done);
     // |____/
     logic r3_start;
     value_product r3_product;
+    logic r3_truncated;
 
     always @(posedge clk)
     begin
         r3_start <= r2_start;
         r3_product <= r2_product;
+        r3_truncated <= r2_truncated;
     end
+
 
     // Final output
     assign done = r3_start;
 
     value_product result_product;
-
     assign result_product.sgn = r3_product.sgn;
     assign result_product.inf = r3_product.inf;
     assign result_product.zero = ~r3_product.inf & r3_product.zero;
@@ -142,5 +161,6 @@ module positmult_4_raw_sumval_es3 (clk, in1, in2, start, result, done);
     assign result_product.scale = r3_product.scale;
 
     assign result = {result_product.sgn, result_product.scale, result_product.fraction, result_product.inf, result_product.zero};
+    assign truncated = r3_truncated;
 
 endmodule

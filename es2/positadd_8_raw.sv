@@ -165,7 +165,7 @@ module positadd_8_raw (clk, in1, in2, start, result, done, truncated);
     assign r1b_sum.zero = r1b_hi.zero & r1b_low.zero;
     assign r1b_sum.inf = r1b_hi.inf | r1b_low.inf;
 
-    logic [4:0] r1b_shift_amount_hiddenbit_out;
+    logic [5:0] r1b_shift_amount_hiddenbit_out;
     assign r1b_shift_amount_hiddenbit_out = r1b_hidden_pos + 1;
 
 
@@ -179,7 +179,7 @@ module positadd_8_raw (clk, in1, in2, start, result, done, truncated);
 
     value_sum r2_sum;
     logic unsigned [ABITS:0] r2_fraction_sum_raw;
-    logic [4:0] r2_shift_amount_hiddenbit_out;
+    logic [5:0] r2_shift_amount_hiddenbit_out;
     logic r2_truncated_after_equalizing;
 
     always @(posedge clk)
@@ -197,7 +197,7 @@ module positadd_8_raw (clk, in1, in2, start, result, done, truncated);
     logic [ABITS:0] r2_fraction_sum_normalized;
     shift_left #(
         .N(ABITS+1),
-        .S(5)
+        .S(6)
     ) ls (
         .a(r2_fraction_sum_raw[ABITS:0]),
         .b(r2_shift_amount_hiddenbit_out),

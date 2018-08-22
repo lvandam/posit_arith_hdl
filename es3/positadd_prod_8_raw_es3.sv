@@ -7,11 +7,11 @@
 
 import posit_defines_es3::*;
 
-module positadd_8_raw_es3 (clk, in1, in2, start, result, done, truncated);
+module positadd_prod_8_raw_es3 (clk, in1, in2, start, result, done, truncated);
 
     input wire clk, start;
-    input wire [POSIT_SERIALIZED_WIDTH_ES3-1:0] in1, in2;
-    output wire [POSIT_SERIALIZED_WIDTH_SUM_ES3-1:0] result;
+    input wire [POSIT_SERIALIZED_WIDTH_PRODUCT_ES3-1:0] in1, in2;
+    output wire [POSIT_SERIALIZED_WIDTH_SUM_PRODUCT_ES3-1:0] result;
     output wire done, truncated;
 
     //   ___
@@ -22,7 +22,7 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done, truncated);
     //  \___/
     logic r0_start;
 
-    value r0_a, r0_b;
+    value_product r0_a, r0_b;
 
     always @(posedge clk)
     begin
@@ -32,13 +32,13 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done, truncated);
             r0_a.scale <= '0;
             r0_a.fraction <= '0;
             r0_a.inf <= '0;
-            r0_a.zero <= in1[0];
+            r0_a.zero <= '1;
         end
         else
         begin
-            r0_a.sgn <= in1[37];
-            r0_a.scale <= in1[36:28];
-            r0_a.fraction <= in1[27:2];
+            r0_a.sgn <= in1[66];
+            r0_a.scale <= in1[65:56];
+            r0_a.fraction <= in1[55:2];
             r0_a.inf <= in1[1];
             r0_a.zero <= in1[0];
         end
@@ -49,13 +49,13 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done, truncated);
             r0_b.scale <= '0;
             r0_b.fraction <= '0;
             r0_b.inf <= '0;
-            r0_b.zero <= in2[0];
+            r0_b.zero <= '1;
         end
         else
         begin
-            r0_b.sgn <= in2[37];
-            r0_b.scale <= in2[36:28];
-            r0_b.fraction <= in2[27:2];
+            r0_b.sgn <= in2[66];
+            r0_b.scale <= in2[65:56];
+            r0_b.fraction <= in2[55:2];
             r0_b.inf <= in2[1];
             r0_b.zero <= in2[0];
         end
@@ -63,7 +63,7 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done, truncated);
         r0_start <= (start === 'x) ? '0 : start;
     end
 
-    value r0_low, r0_hi;
+    value_product r0_low, r0_hi;
 
     logic r0_a_lt_b; // A larger than B
     assign r0_a_lt_b = r0_b.zero ? '1 : (r0_a.zero ? '0 : ((r0_a.scale > r0_b.scale) ? '1 : (r0_a.scale < r0_b.scale ? '0 : (r0_a.fraction >= r0_b.fraction ? '1 : '0))));
@@ -80,7 +80,7 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done, truncated);
     //  |_|
     logic r1_start;
 
-    value r1_low, r1_hi;
+    value_product r1_low, r1_hi;
 
     always @(posedge clk)
     begin
@@ -92,16 +92,16 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done, truncated);
 
     // Difference in scales (regime and exponent)
     // Amount the smaller input has to be shifted (everything of the scale difference that the regime cannot cover)
-    logic unsigned [8:0] r1_scale_diff;
+    logic unsigned [9:0] r1_scale_diff;
     assign r1_scale_diff = r1_hi.scale - r1_low.scale; // TODO this is dirty
 
     // Shift smaller magnitude based on scale difference
-    logic [2*ABITS-1:0] r1_low_fraction_shifted; // TODO We lose some bits here
+    logic [2*AMBITS-1:0] r1_low_fraction_shifted; // TODO We lose some bits here
     shift_right #(
-        .N(2*ABITS),
-        .S(9)
+        .N(2*AMBITS),
+        .S(10)
     ) scale_matching_shift (
-        .a({~r1_low.zero, r1_low.fraction, {ABITS+3{1'b0}}}),
+        .a({~r1_low.zero, r1_low.fraction, {AMBITS+3{1'b0}}}),
         .b(r1_scale_diff), // Shift to right by scale difference
         .c(r1_low_fraction_shifted)
     );
@@ -115,10 +115,10 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done, truncated);
     logic r1b_start;
 
     logic r1b_operation;
-    value r1b_low, r1b_hi;
+    value_product r1b_low, r1b_hi;
     logic r1b_zero, r1b_inf, r1b_sgn;
     logic signed [8:0] r1b_scale;
-    logic [2*ABITS-1:0] r1b_low_fraction_shifted;
+    logic [2*AMBITS-1:0] r1b_low_fraction_shifted;
 
     always @(posedge clk)
     begin
@@ -130,17 +130,17 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done, truncated);
     end
 
     // Add the fractions
-    logic unsigned [ABITS:0] r1b_fraction_sum_raw, r1b_fraction_sum_raw_add, r1b_fraction_sum_raw_sub;
+    logic unsigned [AMBITS:0] r1b_fraction_sum_raw, r1b_fraction_sum_raw_add, r1b_fraction_sum_raw_sub;
 
     assign r1b_operation = r1b_hi.sgn ~^ r1b_low.sgn; // 1 = equal signs = add, 0 = unequal signs = subtract
-    // assign r1b_fraction_sum_raw_add = {~r1b_hi.zero, r1b_hi.fraction, {2{1'b0}}} + r1b_low_fraction_shifted[2*ABITS-4:ABITS-2];
-    // assign r1b_fraction_sum_raw_sub = {~r1b_hi.zero, r1b_hi.fraction, {2{1'b0}}} - r1b_low_fraction_shifted[2*ABITS-4:ABITS-2];
-    assign r1b_fraction_sum_raw_add = {~r1b_hi.zero, r1b_hi.fraction, {3{1'b0}}} + r1b_low_fraction_shifted[2*ABITS-1:ABITS];
-    assign r1b_fraction_sum_raw_sub = {~r1b_hi.zero, r1b_hi.fraction, {3{1'b0}}} - r1b_low_fraction_shifted[2*ABITS-1:ABITS];
+    // assign r1b_fraction_sum_raw_add = {~r1b_hi.zero, r1b_hi.fraction, {2{1'b0}}} + r1b_low_fraction_shifted[2*AMBITS-4:AMBITS-2];
+    // assign r1b_fraction_sum_raw_sub = {~r1b_hi.zero, r1b_hi.fraction, {2{1'b0}}} - r1b_low_fraction_shifted[2*AMBITS-4:AMBITS-2];
+    assign r1b_fraction_sum_raw_add = {~r1b_hi.zero, r1b_hi.fraction, {3{1'b0}}} + r1b_low_fraction_shifted[2*AMBITS-1:AMBITS];
+    assign r1b_fraction_sum_raw_sub = {~r1b_hi.zero, r1b_hi.fraction, {3{1'b0}}} - r1b_low_fraction_shifted[2*AMBITS-1:AMBITS];
     assign r1b_fraction_sum_raw = r1b_operation ? r1b_fraction_sum_raw_add : r1b_fraction_sum_raw_sub;
 
     logic r1b_truncated_after_equalizing;
-    assign r1b_truncated_after_equalizing = |r1b_low_fraction_shifted[ABITS-1:0];
+    assign r1b_truncated_after_equalizing = |r1b_low_fraction_shifted[AMBITS-1:0];
 
     assign r1b_zero = r1b_hi.zero & r1b_low.zero;
     assign r1b_inf = r1b_hi.inf | r1b_low.inf;
@@ -159,7 +159,7 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done, truncated);
 
     logic r2_zero, r2_inf, r2_sgn;
     logic signed [8:0] r2_scale;
-    logic unsigned [ABITS:0] r2_fraction_sum_raw;
+    logic unsigned [AMBITS:0] r2_fraction_sum_raw;
     logic r2_truncated_after_equalizing;
 
     always @(posedge clk)
@@ -176,11 +176,11 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done, truncated);
 
     // Result normalization: shift until normalized (and fix the sign)
     // Find the hidden bit (leading zero counter)
-    logic [4:0] r2_hidden_pos;
+    logic [5:0] r2_hidden_pos;
     LOD_N #(
-        .N(32)
+        .N(64)
     ) hidden_bit_counter(
-        .in({r2_fraction_sum_raw[ABITS:0], {32-ABITS-1{1'b0}}}),
+        .in({r2_fraction_sum_raw[AMBITS:0], {64-AMBITS-1{1'b0}}}),
         .out(r2_hidden_pos)
     );
 
@@ -194,12 +194,12 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done, truncated);
     // |____| |____/
     logic r2b_start;
 
-    value_sum r2b_sum;
+    value_prod_sum r2b_sum;
     logic r2b_truncated_after_equalizing;
-    logic unsigned [ABITS:0] r2b_fraction_sum_raw;
+    logic unsigned [AMBITS:0] r2b_fraction_sum_raw;
     logic r2b_zero, r2b_inf, r2b_sgn;
     logic signed [8:0] r2b_scale;
-    logic [4:0] r2b_hidden_pos;
+    logic [5:0] r2b_hidden_pos;
 
     always @(posedge clk)
     begin
@@ -214,8 +214,8 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done, truncated);
         r2b_truncated_after_equalizing <= r2_truncated_after_equalizing;
     end
 
-    logic signed [8:0] r2b_scale_sum;
-    assign r2b_scale_sum = r2b_fraction_sum_raw[ABITS] ? (r2b_scale + 1) : (~r2b_fraction_sum_raw[ABITS-1] ? (r2b_scale - r2b_hidden_pos + 1) : r2b_scale);
+    logic signed [9:0] r2b_scale_sum;
+    assign r2b_scale_sum = r2b_fraction_sum_raw[AMBITS] ? (r2b_scale + 1) : (~r2b_fraction_sum_raw[AMBITS-1] ? (r2b_scale - r2b_hidden_pos + 1) : r2b_scale);
 
     assign r2b_sum.sgn = r2b_sgn;
     assign r2b_sum.scale = r2b_scale_sum;
@@ -229,9 +229,9 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done, truncated);
     //  ___) |
     // |____/
     logic r3_start;
-    value_sum r3_sum;
-    logic unsigned [ABITS:0] r3_fraction_sum_raw;
-    logic [4:0] r3_hidden_pos;
+    value_prod_sum r3_sum;
+    logic unsigned [AMBITS:0] r3_fraction_sum_raw;
+    logic [5:0] r3_hidden_pos;
     logic r3_truncated_after_equalizing;
 
     always @(posedge clk)
@@ -244,7 +244,7 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done, truncated);
         r3_truncated_after_equalizing <= r2b_truncated_after_equalizing;
     end
 
-    logic [4:0] r3_shift_amount_hiddenbit_out;
+    logic [6:0] r3_shift_amount_hiddenbit_out;
     assign r3_shift_amount_hiddenbit_out = r3_hidden_pos + 1;
 
     //  ____    ____
@@ -254,9 +254,9 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done, truncated);
     //  ___) | | |_) |
     // |____/  |____/
     logic r3b_start;
-    value_sum r3b_sum;
-    logic unsigned [ABITS:0] r3b_fraction_sum_raw;
-    logic [4:0] r3b_shift_amount_hiddenbit_out;
+    value_prod_sum r3b_sum;
+    logic unsigned [AMBITS:0] r3b_fraction_sum_raw;
+    logic [6:0] r3b_shift_amount_hiddenbit_out;
     logic r3b_truncated_after_equalizing;
 
     always @(posedge clk)
@@ -269,12 +269,12 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done, truncated);
     end
 
     // Normalize the sum output (shift left)
-    logic [ABITS:0] r3b_fraction_sum_normalized;
+    logic [AMBITS:0] r3b_fraction_sum_normalized;
     shift_left #(
-        .N(ABITS+1),
-        .S(5)
+        .N(AMBITS+1),
+        .S(7)
     ) ls (
-        .a(r3b_fraction_sum_raw[ABITS:0]),
+        .a(r3b_fraction_sum_raw[AMBITS:0]),
         .b(r3b_shift_amount_hiddenbit_out),
         .c(r3b_fraction_sum_normalized)
     );
@@ -287,21 +287,21 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done, truncated);
     //    / /     / /
     //   /_/     /_/
     logic r99_start;
-    value_sum r99_sum;
+    value_prod_sum r99_sum;
     logic r99_truncated_after_equalizing;
 
     always @(posedge clk)
     begin
         r99_start <= r3b_start;
         r99_sum <= r3b_sum;
-        r99_sum.fraction <= r3b_fraction_sum_normalized[ABITS:1];
+        r99_sum.fraction <= r3b_fraction_sum_normalized[AMBITS:1];
         r99_truncated_after_equalizing <= r3b_truncated_after_equalizing;
     end
 
     // Final output
     assign done = r99_start;
 
-    value_sum result_sum;
+    value_prod_sum result_sum;
     assign result_sum.sgn = r99_sum.sgn;
     assign result_sum.inf = r99_sum.inf;
     assign result_sum.zero = ~r99_sum.inf & r99_sum.zero;

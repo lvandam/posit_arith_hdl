@@ -27,8 +27,29 @@ module posit_normalize_prod (in1, truncated, result, inf, zero);
     logic [ES-1:0] result_exponent;
     assign result_exponent = in.scale % (2 << ES);
 
+
+
+    logic [MBITS-1:0] fraction_leftover;
+    logic [7:0] leftover_shift;
+    assign leftover_shift = NBITS - 4 - regime_shift_amount;
+    // Determine all fraction bits that are truncated in the final result
+    shift_left #(
+        .N(MBITS),
+        .S(8)
+    ) fraction_leftover_shift (
+        .a(in.fraction),
+        .b(leftover_shift), // Shift to right by regime value (clip at maximum number of bits)
+        .c(fraction_leftover)
+    );
+
+    logic sticky_bit;
+    assign sticky_bit = truncated | |fraction_leftover[MBITS-2:0]; // Logical OR of all truncated fraction multiplication bits
+
+
+
+
     logic [28:0] fraction_truncated;
-    assign fraction_truncated = in.fraction[MBITS-1:MBITS-29];
+    assign fraction_truncated = {in.fraction[MBITS-1:MBITS-28], sticky_bit | in.fraction[MBITS-29]};
 
     logic [2*NBITS-1:0] regime_exp_fraction;
     assign regime_exp_fraction = { {NBITS-1{~in.scale[8]}}, // Regime leading bits
@@ -50,21 +71,7 @@ module posit_normalize_prod (in1, truncated, result, inf, zero);
     logic [NBITS-2:0] result_no_sign;
     assign result_no_sign = exp_fraction_shifted_for_regime[NBITS-1:1];
 
-    logic [MBITS-1:0] fraction_leftover;
-    logic [7:0] leftover_shift;
-    assign leftover_shift = NBITS - 4 - regime_shift_amount;
-    // Determine all fraction bits that are truncated in the final result
-    shift_left #(
-        .N(MBITS),
-        .S(8)
-    ) fraction_leftover_shift (
-        .a(in.fraction),
-        .b(leftover_shift), // Shift to right by regime value (clip at maximum number of bits)
-        .c(fraction_leftover)
-    );
 
-    logic sticky_bit;
-    assign sticky_bit = truncated | |fraction_leftover[MBITS-2:0]; // Logical OR of all truncated fraction multiplication bits
 
     logic bafter;
     assign bafter = fraction_leftover[MBITS-1];

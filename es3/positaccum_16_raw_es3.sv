@@ -7,12 +7,12 @@
 
 import posit_defines_es3::*;
 
-module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
+module positaccum_16_raw_es3 (clk, rst, in1, start, result, done);
 
     input wire clk, rst, start;
     input wire [POSIT_SERIALIZED_WIDTH_ES3-1:0] in1;
     output wire [POSIT_SERIALIZED_WIDTH_ACCUM_ES3-1:0] result;
-    output wire done, truncated;
+    output wire done;
 
     value_accum out_accum;
 
@@ -174,9 +174,6 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
         .c(r1aa_low_fraction_shifted)
     );
 
-    logic r1aa_truncated_after_equalizing;
-    assign r1aa_truncated_after_equalizing = |r1aa_low_fraction_shifted[ABITS_ACCUM-1:0];
-
 
     //  __
     // /_ |     /\
@@ -188,7 +185,6 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
     value_accum r1a_low, r1a_hi;
     logic [2*ABITS_ACCUM-1:0] r1a_low_fraction_shifted; // TODO We lose some bits here
     logic unsigned [ABITS_ACCUM:0] r1a_fraction_sum_raw;
-    logic r1a_truncated_after_equalizing;
 
     always @(posedge clk, posedge rst)
     begin
@@ -220,7 +216,6 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
             r1a_hi <= r1aa_hi;
             r1a_low <= r1aa_low;
             r1a_low_fraction_shifted <= r1aa_low_fraction_shifted;
-            r1a_truncated_after_equalizing <= r1aa_truncated_after_equalizing;
         end
     end
 
@@ -247,8 +242,7 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
     logic unsigned [ABITS_ACCUM:0] r1b_fraction_sum_raw;
 
     value_accum r1b_lowShiftReg[7:0], r1b_hiShiftReg[7:0];
-    logic [7:0] r1b_startShiftReg, r1b_truncated_after_equalizingShiftReg;
-    logic r1b_truncated_after_equalizing;
+    logic [7:0] r1b_startShiftReg;
     integer i;
 
     always @(posedge clk, posedge rst)
@@ -270,8 +264,6 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
                 r1b_lowShiftReg[i].fraction = '0;
                 r1b_lowShiftReg[i].inf = '0;
                 r1b_lowShiftReg[i].zero = '1;
-
-                r1b_truncated_after_equalizingShiftReg[i] <= '0;
             end
         end
         else
@@ -280,14 +272,12 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
             r1b_startShiftReg[0] <= r1a_start;
             r1b_lowShiftReg[0] <= r1a_low;
             r1b_hiShiftReg[0] <= r1a_hi;
-            r1b_truncated_after_equalizingShiftReg[0] <= r1a_truncated_after_equalizing;
 
             for(i = 1; i < 8; i = i + 1)
             begin
                 r1b_startShiftReg[i] <= r1b_startShiftReg[i - 1];
                 r1b_lowShiftReg[i] <= r1b_lowShiftReg[i - 1];
                 r1b_hiShiftReg[i] <= r1b_hiShiftReg[i - 1];
-                r1b_truncated_after_equalizingShiftReg[i] <= r1b_truncated_after_equalizingShiftReg[i - 1];
             end
         end
     end
@@ -297,7 +287,6 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
     assign r1b_start = r1b_startShiftReg[7];
     assign r1b_low = r1b_lowShiftReg[7];
     assign r1b_hi = r1b_hiShiftReg[7];
-    assign r1b_truncated_after_equalizing = r1b_truncated_after_equalizingShiftReg[7];
 
     // Result normalization: shift until normalized (and fix the sign)
     // Find the hidden bit (leading zero counter)
@@ -321,7 +310,6 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
     value_accum r2aa_sum, r2aa_hi, r2aa_low;
     logic unsigned [ABITS_ACCUM:0] r2aa_fraction_sum_raw;
     logic [8:0] r2aa_hidden_pos;
-    logic r2aa_truncated_after_equalizing;
 
     always @(posedge clk, posedge rst)
     begin
@@ -340,7 +328,6 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
 
             r2aa_fraction_sum_raw <= '0;
             r2aa_hidden_pos <= '0;
-            r2aa_truncated_after_equalizing <= '0;
         end
         else
         begin
@@ -353,7 +340,6 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
 
             r2aa_fraction_sum_raw <= r1b_fraction_sum_raw;
             r2aa_hidden_pos <= r1b_hidden_pos;
-            r2aa_truncated_after_equalizing <= r1b_truncated_after_equalizing;
         end
     end
 
@@ -377,7 +363,6 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
     logic unsigned [ABITS_ACCUM:0] r2a_fraction_sum_raw;
     logic [9:0] r2a_shift_amount_hiddenbit_out;
     logic [8:0] r2a_hidden_pos;
-    logic r2a_truncated_after_equalizing;
 
     always @(posedge clk, posedge rst)
     begin
@@ -391,7 +376,6 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
             r2a_sum.zero = '1;
 
             r2a_fraction_sum_raw <= '0;
-            r2a_truncated_after_equalizing <= '0;
         end
         else
         begin
@@ -404,7 +388,6 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
 
             r2a_fraction_sum_raw <= r2aa_fraction_sum_raw;
             r2a_hidden_pos <= r2aa_hidden_pos;
-            r2a_truncated_after_equalizing <= r2aa_truncated_after_equalizing;
         end
     end
 
@@ -421,7 +404,6 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
     value_accum r2_sum;
     logic unsigned [ABITS_ACCUM:0] r2_fraction_sum_raw;
     logic [9:0] r2_shift_amount_hiddenbit_out;
-    logic r2_truncated_after_equalizing;
 
     always @(posedge clk, posedge rst)
     begin
@@ -436,7 +418,6 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
 
             r2_fraction_sum_raw <= '0;
             r2_shift_amount_hiddenbit_out <= '0;
-            r2_truncated_after_equalizing <= '0;
         end
         else
         begin
@@ -449,7 +430,6 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
 
             r2_fraction_sum_raw <= r2a_fraction_sum_raw;
             r2_shift_amount_hiddenbit_out <= r2a_shift_amount_hiddenbit_out;
-            r2_truncated_after_equalizing <= r2a_truncated_after_equalizing;
         end
     end
 
@@ -475,7 +455,6 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
     //   /_/     /_/
     logic r99_start;
     value_accum r99_sum;
-    logic r99_truncated_after_equalizing;
 
     always @(posedge clk, posedge rst)
     begin
@@ -488,14 +467,11 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
             r99_sum.fraction = '0;
             r99_sum.inf = '0;
             r99_sum.zero = '1;
-
-            r99_truncated_after_equalizing = '0;
         end
         else
         begin
             r99_start <= r2_start;
             r99_sum <= r2_sum;
-            r99_truncated_after_equalizing <= r2_truncated_after_equalizing;
         end
     end
 
@@ -512,5 +488,4 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done, truncated);
 
     assign result = {r99_sum.sgn, r99_sum.scale, r99_sum.fraction, r99_sum.inf, r99_sum.zero};
     assign done = r99_start;
-    assign truncated = r99_truncated_after_equalizing;
 endmodule

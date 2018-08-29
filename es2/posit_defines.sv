@@ -88,7 +88,7 @@ typedef struct {
 typedef struct {
     logic sgn;                         // 1
     logic signed [8:0] scale;          // 9
-    logic [FBITS_ACCUM-1:0] fraction;  // 151
+    logic [FBITS_ACCUM-1:0] fraction;  // 147
     logic inf;                         // 1
     logic zero;                        // 1
 } value_accum_prod;

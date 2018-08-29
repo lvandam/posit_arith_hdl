@@ -158,7 +158,7 @@ module positadd_prod_8_raw_es3 (clk, in1, in2, start, result, done, truncated);
     logic r2_start;
 
     logic r2_zero, r2_inf, r2_sgn;
-    logic signed [8:0] r2_scale;
+    logic signed [9:0] r2_scale;
     logic unsigned [AMBITS:0] r2_fraction_sum_raw;
     logic r2_truncated_after_equalizing;
 
@@ -198,7 +198,7 @@ module positadd_prod_8_raw_es3 (clk, in1, in2, start, result, done, truncated);
     logic r2b_truncated_after_equalizing;
     logic unsigned [AMBITS:0] r2b_fraction_sum_raw;
     logic r2b_zero, r2b_inf, r2b_sgn;
-    logic signed [8:0] r2b_scale;
+    logic signed [9:0] r2b_scale;
     logic [5:0] r2b_hidden_pos;
 
     always @(posedge clk)

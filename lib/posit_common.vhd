@@ -332,10 +332,11 @@ package posit_common is
 
   component posit_normalize_sum_es3
     port (
-      in1    : in  std_logic_vector(POSIT_SERIALIZED_WIDTH_SUM_ES3-1 downto 0);
-      result : out std_logic_vector(31 downto 0);
-      inf    : out std_logic;
-      zero   : out std_logic
+      in1       : in  std_logic_vector(POSIT_SERIALIZED_WIDTH_SUM_ES3-1 downto 0);
+      truncated : in std_logic;
+      result    : out std_logic_vector(31 downto 0);
+      inf       : out std_logic;
+      zero      : out std_logic
       );
   end component;
 

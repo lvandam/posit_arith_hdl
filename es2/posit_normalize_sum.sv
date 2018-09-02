@@ -43,14 +43,6 @@ module posit_normalize_sum (in1, truncated, result, inf, zero);
     logic sticky_bit;
     assign sticky_bit = truncated | |fraction_leftover[30:0]; // Logical OR of all truncated fraction multiplication bits //ABITS TODO Laurens
 
-
-
-
-
-
-
-
-
     logic [28:0] fraction_truncated;
     assign fraction_truncated = {in.fraction[ABITS-1:ABITS-28], in.fraction[ABITS-29] | sticky_bit};
 

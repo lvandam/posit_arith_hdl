@@ -66,6 +66,18 @@ module positaccum_accumprod_16_raw (clk, rst, in1, start, result, done, truncate
 
     logic r0_a_lt_b; // A larger than B
     assign r0_a_lt_b = r0_accum.zero ? '1 : (r0_a.zero ? '0 : ((r0_a.scale > r0_accum.scale) ? '1 : (r0_a.scale < r0_accum.scale ? '0 : (r0_a.fraction >= r0_accum.fraction ? '1 : '0))));
+    // assign r0_a_lt_b = r0_accum.zero ? (r0_a.sgn ? '0 : '1) :
+    //                         (r0_a.zero ? (r0_accum.sgn ? '1 : '0) :
+    //                             ((r0_accum.sgn & ~r0_a.sgn) ? '1 :
+    //                                 ((r0_a.sgn & ~r0_accum.sgn) ? '0 :
+    //                                     ((r0_a.scale > r0_accum.scale) ? '1 :
+    //                                         ((r0_a.scale < r0_accum.scale) ? '0 :
+    //                                             (r0_a.fraction >= r0_accum.fraction ? '1 : '0)
+    //                                         )
+    //                                     )
+    //                                 )
+    //                             )
+    //                         );
 
     assign r0_operation = r0_a.sgn ~^ r0_accum.sgn; // 1 = equal signs = add, 0 = unequal signs = subtract
     assign r0_low = r0_a_lt_b ? r0_accum : r0_a;
@@ -322,6 +334,7 @@ module positaccum_accumprod_16_raw (clk, rst, in1, start, result, done, truncate
     logic unsigned [ABITS_ACCUM:0] r2aa_fraction_sum_raw;
     logic [7:0] r2aa_hidden_pos;
     logic r2aa_truncated_after_equalizing;
+    logic r2aa_operation;
 
     always @(posedge clk, posedge rst)
     begin
@@ -335,6 +348,9 @@ module positaccum_accumprod_16_raw (clk, rst, in1, start, result, done, truncate
             r2aa_hi.inf = '0;
             r2aa_hi.zero = '1;
 
+            r2aa_low.sgn = '0;
+            r2aa_low.scale = '0;
+            r2aa_low.fraction = '0;
             r2aa_low.inf = '0;
             r2aa_low.zero = '1;
 
@@ -347,9 +363,7 @@ module positaccum_accumprod_16_raw (clk, rst, in1, start, result, done, truncate
             r2aa_start <= r1b_start;
 
             r2aa_hi <= r1b_hi;
-
-            r2aa_low.zero <= r1b_low.zero;
-            r2aa_low.inf <= r1b_low.inf;
+            r2aa_low <= r1b_low;
 
             r2aa_fraction_sum_raw <= r1b_fraction_sum_raw;
             r2aa_hidden_pos <= r1b_hidden_pos;
@@ -357,11 +371,13 @@ module positaccum_accumprod_16_raw (clk, rst, in1, start, result, done, truncate
         end
     end
 
+    assign r2aa_operation = r2aa_hi.sgn ~^ r2aa_low.sgn;
+
     logic signed [8:0] r2aa_scale_sum;
     assign r2aa_scale_sum = r2aa_fraction_sum_raw[ABITS_ACCUM] ? (r2aa_hi.scale + 1) : ((~r2aa_fraction_sum_raw[ABITS_ACCUM-1] & ~(r2aa_hi.zero & r2aa_low.zero)) ? (r2aa_hi.scale - r2aa_hidden_pos + 1) : r2aa_hi.scale);
     assign r2aa_sum.sgn = r2aa_hi.sgn;
     assign r2aa_sum.scale = r2aa_scale_sum;
-    assign r2aa_sum.zero = r2aa_hi.zero & r2aa_low.zero;
+    assign r2aa_sum.zero = (r2aa_operation == 1'b0 && r2aa_hi.scale == r2aa_low.scale && r2aa_hi.fraction == r2aa_low.fraction) ? '1 : (r2aa_hi.zero & r2aa_low.zero);
     assign r2aa_sum.inf = r2aa_hi.inf | r2aa_low.inf;
 
 

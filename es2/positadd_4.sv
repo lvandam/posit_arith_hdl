@@ -122,6 +122,7 @@ module positadd_4 (clk, in1, in2, start, result, inf, zero, done);
     logic unsigned [ABITS:0] r2_fraction_sum_raw;
     logic r2_truncated_after_equalizing, r2_out_rounded_zero;
     logic [4:0] r2_shift_amount_hiddenbit_out, r2_hidden_pos;
+    logic r2_operation;
 
     always @(posedge clk)
     begin
@@ -131,6 +132,7 @@ module positadd_4 (clk, in1, in2, start, result, inf, zero, done);
         r2_low <= r1_low;
         r2_fraction_sum_raw <= r1_fraction_sum_raw;
         r2_truncated_after_equalizing <= r1_truncated_after_equalizing;
+        r2_operation <= r1_operation;
     end
 
 
@@ -148,7 +150,7 @@ module positadd_4 (clk, in1, in2, start, result, inf, zero, done);
 
     assign r2_sum.sgn = r2_hi.sgn;
     assign r2_sum.scale = r2_scale_sum;
-    assign r2_sum.zero = r2_hi.zero & r2_low.zero;
+    assign r2_sum.zero = (r2_operation == 1'b0 && r2_hi.scale == r2_low.scale && r2_hi.fraction == r2_low.fraction) ? '1 : (r2_hi.zero & r2_low.zero);
     assign r2_sum.inf = r2_hi.inf | r2_low.inf;
 
     assign r2_shift_amount_hiddenbit_out = r2_hidden_pos + 1;

@@ -356,11 +356,14 @@ module positaccum_accum_16_raw (clk, rst, in1, start, result, done, truncated);
         end
     end
 
+    logic r2aa_operation;
+    assign r2aa_operation = r2aa_hi.sgn ~^ r2aa_low.sgn;
+
     logic signed [7:0] r2aa_scale_sum;
     assign r2aa_scale_sum = r2aa_fraction_sum_raw[ABITS_ACCUM] ? (r2aa_hi.scale + 1) : ((~r2aa_fraction_sum_raw[ABITS_ACCUM-1] & ~(r2aa_hi.zero & r2aa_low.zero)) ? (r2aa_hi.scale - r2aa_hidden_pos + 1) : r2aa_hi.scale);
     assign r2aa_sum.sgn = r2aa_hi.sgn;
     assign r2aa_sum.scale = r2aa_scale_sum;
-    assign r2aa_sum.zero = r2aa_hi.zero & r2aa_low.zero;
+    assign r2aa_sum.zero = (r2aa_operation == 1'b0 && r2aa_hi.scale == r2aa_low.scale && r2aa_hi.fraction == r2aa_low.fraction) ? '1 : (r2aa_hi.zero & r2aa_low.zero);
     assign r2aa_sum.inf = r2aa_hi.inf | r2aa_low.inf;
 
 

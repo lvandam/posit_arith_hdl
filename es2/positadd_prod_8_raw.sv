@@ -135,6 +135,7 @@ module positadd_prod_8_raw (clk, in1, in2, start, result, done, truncated);
     value_prod_sum r1b_sum;
     logic unsigned [AMBITS:0] r1b_fraction_sum_raw;
     logic r1b_truncated_after_equalizing;
+    logic r1b_operation;
 
     always @(posedge clk)
     begin
@@ -145,6 +146,7 @@ module positadd_prod_8_raw (clk, in1, in2, start, result, done, truncated);
         r1b_fraction_sum_raw <= r1_fraction_sum_raw;
 
         r1b_truncated_after_equalizing <= r1_truncated_after_equalizing;
+        r1b_operation <= r1_operation;
     end
 
     // Result normalization: shift until normalized (and fix the sign)
@@ -162,7 +164,7 @@ module positadd_prod_8_raw (clk, in1, in2, start, result, done, truncated);
 
     assign r1b_sum.sgn = r1b_hi.sgn;
     assign r1b_sum.scale = r1b_scale_sum;
-    assign r1b_sum.zero = r1b_hi.zero & r1b_low.zero;
+    assign r1b_sum.zero = (r1b_operation == 1'b0 && r1b_hi.scale == r1b_low.scale && r1b_hi.fraction == r1b_low.fraction) ? '1 : (r1b_hi.zero & r1b_low.zero);
     assign r1b_sum.inf = r1b_hi.inf | r1b_low.inf;
 
     logic [6:0] r1b_shift_amount_hiddenbit_out;

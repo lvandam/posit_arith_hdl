@@ -152,6 +152,7 @@ module positadd_4_truncated_prodsum_raw (clk, in1, in1_truncated, in2, in2_trunc
     logic unsigned [AAMBITS:0] r2_fraction_sum_raw;
     logic [6:0] r2_shift_amount_hiddenbit_out, r2_hidden_pos;
     logic r2_truncated_after_equalizing;
+    logic r2_operation;
 
     always @(posedge clk)
     begin
@@ -162,6 +163,7 @@ module positadd_4_truncated_prodsum_raw (clk, in1, in1_truncated, in2, in2_trunc
         r2_fraction_sum_raw <= r1_fraction_sum_raw;
 
         r2_truncated_after_equalizing <= r1_truncated_after_equalizing;
+        r2_operation <= r1_operation;
     end
 
     // Result normalization: shift until normalized (and fix the sign)
@@ -178,7 +180,7 @@ module positadd_4_truncated_prodsum_raw (clk, in1, in1_truncated, in2, in2_trunc
 
     assign r2_sum.sgn = r2_hi.sgn;
     assign r2_sum.scale = r2_scale_sum;
-    assign r2_sum.zero = r2_hi.zero & r2_low.zero;
+    assign r2_sum.zero = (r2_operation == 1'b0 && r2_hi.scale == r2_low.scale && r2_hi.fraction == r2_low.fraction) ? '1 : (r2_hi.zero & r2_low.zero);
     assign r2_sum.inf = r2_hi.inf | r2_low.inf;
 
     assign r2_shift_amount_hiddenbit_out = r2_hidden_pos + 1;

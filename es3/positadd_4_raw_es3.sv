@@ -163,7 +163,7 @@ module positadd_4_raw_es3 (clk, in1, in2, start, result, done, truncated);
 
     assign r2_sum.sgn = r2_hi.sgn;
     assign r2_sum.scale = r2_scale_sum;
-    assign r2_sum.zero = (r2_operation == 1'b0 && r2_hi.scale == r2_low.scale && r2_hi.fraction == r2_low.fraction) ? '1 : (r2_hi.zero & r2_low.zero);
+    assign r2_sum.zero = (r2_operation == 1'b0 && r2_hi.zero != 1'b1 && r2_low.zero != 1'b1 && r2_hi.scale == r2_low.scale && r2_hi.fraction == r2_low.fraction) ? '1 : (r2_hi.zero & r2_low.zero);
     assign r2_sum.inf = r2_hi.inf | r2_low.inf;
 
     //  ____

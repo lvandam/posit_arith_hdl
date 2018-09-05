@@ -56,7 +56,7 @@ module posit_normalize_product_prod_sum_sum (in1, truncated, result, inf, zero);
     logic [2*NBITS-1:0] exp_fraction_shifted_for_regime;
     shift_right #(
         .N(2*NBITS),
-        .S(8)
+        .S(9)
     ) shift_in_regime (
         .a(regime_exp_fraction), // exponent + fraction bits
         .b(regime_shift_amount), // Shift to right by regime value (clip at maximum number of bits)

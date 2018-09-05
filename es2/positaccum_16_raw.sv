@@ -323,6 +323,9 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
             r2aa_hi.inf = '0;
             r2aa_hi.zero = '1;
 
+            r2aa_low.sgn = '0;
+            r2aa_low.scale = '0;
+            r2aa_low.fraction = '0;
             r2aa_low.inf = '0;
             r2aa_low.zero = '1;
 
@@ -334,9 +337,7 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
             r2aa_start <= r1b_start;
 
             r2aa_hi <= r1b_hi;
-
-            r2aa_low.zero <= r1b_low.zero;
-            r2aa_low.inf <= r1b_low.inf;
+            r2aa_low <= r1b_low;
 
             r2aa_fraction_sum_raw <= r1b_fraction_sum_raw;
             r2aa_hidden_pos <= r1b_hidden_pos;

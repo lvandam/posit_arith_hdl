@@ -142,7 +142,7 @@ module positadd_8_raw_es3 (clk, in1, in2, start, result, done, truncated);
     logic r1b_truncated_after_equalizing;
     assign r1b_truncated_after_equalizing = |r1b_low_fraction_shifted[ABITS-1:0];
 
-    assign r1b_zero = r1b_hi.zero & r1b_low.zero;
+    assign r1b_zero = (r1b_operation == 1'b0 && r1b_hi.scale == r1b_low.scale && r1b_hi.fraction == r1b_low.fraction) ? '1 : (r1b_hi.zero & r1b_low.zero);
     assign r1b_inf = r1b_hi.inf | r1b_low.inf;
     assign r1b_sgn = r1b_hi.sgn;
     assign r1b_scale = r1b_hi.scale;

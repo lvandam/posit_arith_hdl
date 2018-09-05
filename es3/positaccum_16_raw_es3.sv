@@ -323,6 +323,9 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done);
             r2aa_hi.inf = '0;
             r2aa_hi.zero = '1;
 
+            r2aa_low.sgn = '0;
+            r2aa_low.scale = '0;
+            r2aa_low.fraction = '0;
             r2aa_low.inf = '0;
             r2aa_low.zero = '1;
 
@@ -334,20 +337,21 @@ module positaccum_16_raw_es3 (clk, rst, in1, start, result, done);
             r2aa_start <= r1b_start;
 
             r2aa_hi <= r1b_hi;
-
-            r2aa_low.zero <= r1b_low.zero;
-            r2aa_low.inf <= r1b_low.inf;
+            r2aa_low <= r1b_low;
 
             r2aa_fraction_sum_raw <= r1b_fraction_sum_raw;
             r2aa_hidden_pos <= r1b_hidden_pos;
         end
     end
 
+    logic r2aa_operation;
+    assign r2aa_operation = r2aa_hi.sgn ~^ r2aa_low.sgn;
+
     logic signed [8:0] r2aa_scale_sum;
     assign r2aa_scale_sum = r2aa_fraction_sum_raw[ABITS_ACCUM] ? (r2aa_hi.scale + 1) : ((~r2aa_fraction_sum_raw[ABITS_ACCUM-1] & ~(r2aa_hi.zero & r2aa_low.zero)) ? (r2aa_hi.scale - r2aa_hidden_pos + 1) : r2aa_hi.scale);
     assign r2aa_sum.sgn = r2aa_hi.sgn;
     assign r2aa_sum.scale = r2aa_scale_sum;
-    assign r2aa_sum.zero = r2aa_hi.zero & r2aa_low.zero;
+    assign r2aa_sum.zero = (r2aa_operation == 1'b0 && r2aa_hi.scale == r2aa_low.scale && r2aa_hi.fraction == r2aa_low.fraction) ? '1 : (r2aa_hi.zero & r2aa_low.zero);
     assign r2aa_sum.inf = r2aa_hi.inf | r2aa_low.inf;
 
 

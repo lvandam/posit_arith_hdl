@@ -130,6 +130,8 @@ module positadd_8_es3 (clk, in1, in2, start, result, inf, zero, done);
         r1b_truncated_after_equalizing <= r1_truncated_after_equalizing;
     end
 
+    logic r1b_operation;
+    assign r1b_operation = r1b_low.sgn ~^ r1b_hi.sgn;
 
     // Result normalization: shift until normalized (and fix the sign)
     // Find the hidden bit (leading zero counter)
@@ -146,7 +148,7 @@ module positadd_8_es3 (clk, in1, in2, start, result, inf, zero, done);
 
     assign r1b_sum.sgn = r1b_hi.sgn;
     assign r1b_sum.scale = r1b_scale_sum;
-    assign r1b_sum.zero = r1b_hi.zero & r1b_low.zero;
+    assign r1b_sum.zero = (r1b_operation == 1'b0 && r1b_hi.scale == r1b_low.scale && r1b_hi.fraction == r1b_low.fraction) ? '1 : (r1b_hi.zero & r1b_low.zero);
     assign r1b_sum.inf = r1b_hi.inf | r1b_low.inf;
 
     logic [4:0] r1b_shift_amount_hiddenbit_out;

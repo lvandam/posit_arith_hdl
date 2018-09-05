@@ -138,6 +138,7 @@ module positadd_prod_4_raw_es3 (clk, in1, in2, start, result, done, truncated);
     logic [5:0] r2_hidden_pos;
     logic r2_truncated_after_equalizing;
     logic signed [9:0] r2_scale_sum;
+    logic r2_operation;
 
     always @(posedge clk)
     begin
@@ -146,6 +147,7 @@ module positadd_prod_4_raw_es3 (clk, in1, in2, start, result, done, truncated);
         r2_low <= r1_low;
         r2_fraction_sum_raw <= r1_fraction_sum_raw;
         r2_truncated_after_equalizing <= r1_truncated_after_equalizing;
+        r2_operation <= r1_operation;
     end
 
     // Result normalization: shift until normalized (and fix the sign)
@@ -161,7 +163,7 @@ module positadd_prod_4_raw_es3 (clk, in1, in2, start, result, done, truncated);
 
     assign r2_sum.sgn = r2_hi.sgn;
     assign r2_sum.scale = r2_scale_sum;
-    assign r2_sum.zero = r2_hi.zero & r2_low.zero;
+    assign r2_sum.zero = (r2_operation == 1'b0 && r2_hi.scale == r2_low.scale && r2_hi.fraction == r2_low.fraction) ? '1 : (r2_hi.zero & r2_low.zero);
     assign r2_sum.inf = r2_hi.inf | r2_low.inf;
 
     //  ____

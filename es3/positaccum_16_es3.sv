@@ -261,12 +261,15 @@ module positaccum_16_es3 (clk, rst, in1, start, result, inf, zero, done);
         .out(r1b_hidden_pos)
     );
 
+    logic r1b_operation;
+    assign r1b_operation = r1b_hi.sgn ~^ r1b_low.sgn;
+
     logic signed [8:0] r1b_scale_sum;
     assign r1b_scale_sum = r1b_fraction_sum_raw[ABITS_ACCUM] ? (r1b_hi.scale + 1) : ((~r1b_fraction_sum_raw[ABITS_ACCUM-1] & ~(r1b_hi.zero & r1b_low.zero)) ? (r1b_hi.scale - r1b_hidden_pos + 1) : r1b_hi.scale);
 
     assign r1b_sum.sgn = r1b_hi.sgn;
     assign r1b_sum.scale = r1b_scale_sum;
-    assign r1b_sum.zero = r1b_hi.zero & r1b_low.zero;
+    assign r1b_sum.zero = (r1b_operation == 1'b0 && r1b_hi.scale == r1b_low.scale && r1b_hi.fraction == r1b_low.fraction) ? '1 : (r1b_hi.zero & r1b_low.zero);
     assign r1b_sum.inf = r1b_hi.inf | r1b_low.inf;
 
     logic [9:0] r1b_shift_amount_hiddenbit_out;

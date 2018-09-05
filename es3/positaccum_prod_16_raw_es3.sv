@@ -335,6 +335,9 @@ module positaccum_prod_16_raw_es3 (clk, rst, in1, start, result, done, truncated
             r2aa_hi.inf = '0;
             r2aa_hi.zero = '1;
 
+            r2aa_low.sgn = '0;
+            r2aa_low.scale = '0;
+            r2aa_low.fraction = '0;
             r2aa_low.inf = '0;
             r2aa_low.zero = '1;
 

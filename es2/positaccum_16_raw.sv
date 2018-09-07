@@ -27,21 +27,21 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
     value_accum r0_a, r0_accum;
     logic r0_operation;
 
-    always @(posedge clk, posedge rst)
+    always @(posedge clk)
     begin
         if(rst)
         begin
-            r0_accum.sgn <= '0;
-            r0_accum.scale <= '0;
-            r0_accum.fraction <= '0;
-            r0_accum.inf <= '0;
-            r0_accum.zero <= '1;
-
             r0_a.sgn <= '0;
             r0_a.scale <= '0;
             r0_a.fraction <= '0;
             r0_a.inf <= '0;
             r0_a.zero <= '1;
+
+            r0_accum.sgn <= '0;
+            r0_accum.scale <= '0;
+            r0_accum.fraction <= '0;
+            r0_accum.inf <= '0;
+            r0_accum.zero <= '1;
         end
         else
         begin
@@ -62,7 +62,11 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
                 r0_a.zero <= in1[0];
             end
 
-            if(out_accum.scale === 'x)
+            if(done == 1'b1)
+            begin
+                r0_accum <= out_accum;
+            end
+            else
             begin
                 r0_accum.sgn <= '0;
                 r0_accum.scale <= '0;
@@ -70,13 +74,9 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
                 r0_accum.inf <= '0;
                 r0_accum.zero <= '1;
             end
-            else
-            begin
-                r0_accum <= out_accum;
-            end
         end
 
-        r0_start <= (start === 'x) ? '0 : start;
+        r0_start <= (start == 1'b1) ? '1 : '0;
     end
 
     value_accum r0_low, r0_hi;
@@ -101,7 +101,7 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
 
     logic r1_operation;
 
-    always @(posedge clk, posedge rst)
+    always @(posedge clk)
     begin
         if(rst)
         begin
@@ -147,7 +147,7 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
     value_accum r1aa_low, r1aa_hi;
     logic unsigned [7:0] r1aa_scale_diff;
 
-    always @(posedge clk, posedge rst)
+    always @(posedge clk)
     begin
         if(rst)
         begin
@@ -203,7 +203,7 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
     logic [2*ABITS_ACCUM-1:0] r1a_low_fraction_shifted; // TODO We lose some bits here
     logic unsigned [ABITS_ACCUM:0] r1a_fraction_sum_raw;
 
-    always @(posedge clk, posedge rst)
+    always @(posedge clk)
     begin
         if(rst)
         begin
@@ -262,7 +262,7 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
     logic [7:0] r1b_startShiftReg;
     integer i;
 
-    always @(posedge clk, posedge rst)
+    always @(posedge clk)
     begin
         if(rst)
         begin
@@ -328,7 +328,7 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
     logic unsigned [ABITS_ACCUM:0] r2aa_fraction_sum_raw;
     logic [7:0] r2aa_hidden_pos;
 
-    always @(posedge clk, posedge rst)
+    always @(posedge clk)
     begin
         if(rst)
         begin
@@ -368,6 +368,7 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
     assign r2aa_scale_sum = r2aa_fraction_sum_raw[ABITS_ACCUM] ? (r2aa_hi.scale + 1) : ((~r2aa_fraction_sum_raw[ABITS_ACCUM-1] & ~(r2aa_hi.zero & r2aa_low.zero)) ? (r2aa_hi.scale - r2aa_hidden_pos + 1) : r2aa_hi.scale);
     assign r2aa_sum.sgn = r2aa_hi.sgn;
     assign r2aa_sum.scale = r2aa_scale_sum;
+    assign r2aa_sum.fraction = '0;
     assign r2aa_sum.zero = (r2aa_operation == 1'b0 && r2aa_hi.scale == r2aa_low.scale && r2aa_hi.fraction == r2aa_low.fraction) ? '1 : (r2aa_hi.zero & r2aa_low.zero);
     assign r2aa_sum.inf = r2aa_hi.inf | r2aa_low.inf;
 
@@ -385,7 +386,7 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
     logic [7:0] r2a_shift_amount_hiddenbit_out;
     logic [7:0] r2a_hidden_pos;
 
-    always @(posedge clk, posedge rst)
+    always @(posedge clk)
     begin
         if(rst)
         begin
@@ -406,7 +407,7 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
 
             r2a_sum.sgn <= r2aa_sum.sgn;
             r2a_sum.scale <= r2aa_sum.scale;
-            r2a_sum.fraction <= '0;
+            r2a_sum.fraction <= r2aa_sum.fraction;
             r2a_sum.inf <= r2aa_sum.inf;
             r2a_sum.zero <= r2aa_sum.zero;
 
@@ -430,7 +431,7 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
     logic [7:0] r2_shift_amount_hiddenbit_out;
     logic [FBITS_ACCUM-1:0] r2_trunc_frac;
 
-    always @(posedge clk, posedge rst)
+    always @(posedge clk)
     begin
         if(rst)
         begin
@@ -483,7 +484,7 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
     logic r99_start;
     value_accum r99_sum;
 
-    always @(posedge clk, posedge rst)
+    always @(posedge clk)
     begin
         if(rst)
         begin

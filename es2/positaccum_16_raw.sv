@@ -29,8 +29,14 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
 
     always @(posedge clk, posedge rst)
     begin
-        if (in1[0] == 1'b1 | ~start)
+        if(rst)
         begin
+            r0_accum.sgn <= '0;
+            r0_accum.scale <= '0;
+            r0_accum.fraction <= '0;
+            r0_accum.inf <= '0;
+            r0_accum.zero <= '1;
+
             r0_a.sgn <= '0;
             r0_a.scale <= '0;
             r0_a.fraction <= '0;
@@ -39,27 +45,38 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
         end
         else
         begin
-            r0_a.sgn <= in1[37];
-            r0_a.scale <= in1[36:29];
-            r0_a.fraction <= {in1[28:2], {FBITS_ACCUM-FBITS{1'b0}}};
-            r0_a.inf <= in1[1];
-            r0_a.zero <= in1[0];
+            if (in1[0] == 1'b1 | ~start)
+            begin
+                r0_a.sgn <= '0;
+                r0_a.scale <= '0;
+                r0_a.fraction <= '0;
+                r0_a.inf <= '0;
+                r0_a.zero <= '1;
+            end
+            else
+            begin
+                r0_a.sgn <= in1[37];
+                r0_a.scale <= in1[36:29];
+                r0_a.fraction <= {in1[28:2], {FBITS_ACCUM-FBITS{1'b0}}};
+                r0_a.inf <= in1[1];
+                r0_a.zero <= in1[0];
+            end
+
+            if(out_accum.scale === 'x)
+            begin
+                r0_accum.sgn <= '0;
+                r0_accum.scale <= '0;
+                r0_accum.fraction <= '0;
+                r0_accum.inf <= '0;
+                r0_accum.zero <= '1;
+            end
+            else
+            begin
+                r0_accum <= out_accum;
+            end
         end
 
         r0_start <= (start === 'x) ? '0 : start;
-
-        if (rst || out_accum.scale === 'x)
-        begin
-            r0_accum.sgn = '0;
-            r0_accum.scale = '0;
-            r0_accum.fraction = '0;
-            r0_accum.inf = '0;
-            r0_accum.zero = '1;
-        end
-        else
-        begin
-            r0_accum <= out_accum;
-        end
     end
 
     value_accum r0_low, r0_hi;
@@ -92,17 +109,17 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
 
             r1_operation <= '0;
 
-            r1_hi.sgn = '0;
-            r1_hi.scale = '0;
-            r1_hi.fraction = '0;
-            r1_hi.inf = '0;
-            r1_hi.zero = '1;
+            r1_hi.sgn <= '0;
+            r1_hi.scale <= '0;
+            r1_hi.fraction <= '0;
+            r1_hi.inf <= '0;
+            r1_hi.zero <= '1;
 
-            r1_low.sgn = '0;
-            r1_low.scale = '0;
-            r1_low.fraction = '0;
-            r1_low.inf = '0;
-            r1_low.zero = '1;
+            r1_low.sgn <= '0;
+            r1_low.scale <= '0;
+            r1_low.fraction <= '0;
+            r1_low.inf <= '0;
+            r1_low.zero <= '1;
         end
         else
         begin
@@ -138,17 +155,17 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
 
             r1aa_operation <= '0;
 
-            r1aa_hi.sgn = '0;
-            r1aa_hi.scale = '0;
-            r1aa_hi.fraction = '0;
-            r1aa_hi.inf = '0;
-            r1aa_hi.zero = '1;
+            r1aa_hi.sgn <= '0;
+            r1aa_hi.scale <= '0;
+            r1aa_hi.fraction <= '0;
+            r1aa_hi.inf <= '0;
+            r1aa_hi.zero <= '1;
 
-            r1aa_low.sgn = '0;
-            r1aa_low.scale = '0;
-            r1aa_low.fraction = '0;
-            r1aa_low.inf = '0;
-            r1aa_low.zero = '1;
+            r1aa_low.sgn <= '0;
+            r1aa_low.scale <= '0;
+            r1aa_low.fraction <= '0;
+            r1aa_low.inf <= '0;
+            r1aa_low.zero <= '1;
 
             r1aa_scale_diff <= '0;
         end
@@ -194,17 +211,17 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
 
             r1a_operation <= '0;
 
-            r1a_hi.sgn = '0;
-            r1a_hi.scale = '0;
-            r1a_hi.fraction = '0;
-            r1a_hi.inf = '0;
-            r1a_hi.zero = '1;
+            r1a_hi.sgn <= '0;
+            r1a_hi.scale <= '0;
+            r1a_hi.fraction <= '0;
+            r1a_hi.inf <= '0;
+            r1a_hi.zero <= '1;
 
-            r1a_low.sgn = '0;
-            r1a_low.scale = '0;
-            r1a_low.fraction = '0;
-            r1a_low.inf = '0;
-            r1a_low.zero = '1;
+            r1a_low.sgn <= '0;
+            r1a_low.scale <= '0;
+            r1a_low.fraction <= '0;
+            r1a_low.inf <= '0;
+            r1a_low.zero <= '1;
 
             r1a_low_fraction_shifted <= '0;
         end
@@ -253,17 +270,17 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
             begin
                 r1b_startShiftReg[i] <= '0;
 
-                r1b_hiShiftReg[i].sgn = '0;
-                r1b_hiShiftReg[i].scale = '0;
-                r1b_hiShiftReg[i].fraction = '0;
-                r1b_hiShiftReg[i].inf = '0;
-                r1b_hiShiftReg[i].zero = '1;
+                r1b_hiShiftReg[i].sgn <= '0;
+                r1b_hiShiftReg[i].scale <= '0;
+                r1b_hiShiftReg[i].fraction <= '0;
+                r1b_hiShiftReg[i].inf <= '0;
+                r1b_hiShiftReg[i].zero <= '1;
 
-                r1b_lowShiftReg[i].sgn = '0;
-                r1b_lowShiftReg[i].scale = '0;
-                r1b_lowShiftReg[i].fraction = '0;
-                r1b_lowShiftReg[i].inf = '0;
-                r1b_lowShiftReg[i].zero = '1;
+                r1b_lowShiftReg[i].sgn <= '0;
+                r1b_lowShiftReg[i].scale <= '0;
+                r1b_lowShiftReg[i].fraction <= '0;
+                r1b_lowShiftReg[i].inf <= '0;
+                r1b_lowShiftReg[i].zero <= '1;
             end
         end
         else
@@ -317,17 +334,17 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
         begin
             r2aa_start <= '0;
 
-            r2aa_hi.sgn = '0;
-            r2aa_hi.scale = '0;
-            r2aa_hi.fraction = '0;
-            r2aa_hi.inf = '0;
-            r2aa_hi.zero = '1;
+            r2aa_hi.sgn <= '0;
+            r2aa_hi.scale <= '0;
+            r2aa_hi.fraction <= '0;
+            r2aa_hi.inf <= '0;
+            r2aa_hi.zero <= '1;
 
-            r2aa_low.sgn = '0;
-            r2aa_low.scale = '0;
-            r2aa_low.fraction = '0;
-            r2aa_low.inf = '0;
-            r2aa_low.zero = '1;
+            r2aa_low.sgn <= '0;
+            r2aa_low.scale <= '0;
+            r2aa_low.fraction <= '0;
+            r2aa_low.inf <= '0;
+            r2aa_low.zero <= '1;
 
             r2aa_fraction_sum_raw <= '0;
             r2aa_hidden_pos <= '0;
@@ -374,10 +391,11 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
         begin
             r2a_start <= '0;
 
-            r2a_sum.sgn = '0;
-            r2a_sum.scale = '0;
-            r2a_sum.inf = '0;
-            r2a_sum.zero = '1;
+            r2a_sum.sgn <= '0;
+            r2a_sum.scale <= '0;
+            r2a_sum.fraction <= '0;
+            r2a_sum.inf <= '0;
+            r2a_sum.zero <= '1;
 
             r2a_fraction_sum_raw <= '0;
             r2a_hidden_pos <= '0;
@@ -388,6 +406,7 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
 
             r2a_sum.sgn <= r2aa_sum.sgn;
             r2a_sum.scale <= r2aa_sum.scale;
+            r2a_sum.fraction <= '0;
             r2a_sum.inf <= r2aa_sum.inf;
             r2a_sum.zero <= r2aa_sum.zero;
 
@@ -409,6 +428,7 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
     value_accum r2_sum;
     logic unsigned [ABITS_ACCUM:0] r2_fraction_sum_raw;
     logic [7:0] r2_shift_amount_hiddenbit_out;
+    logic [FBITS_ACCUM-1:0] r2_trunc_frac;
 
     always @(posedge clk, posedge rst)
     begin
@@ -416,10 +436,11 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
         begin
             r2_start <= '0;
 
-            r2_sum.sgn = '0;
-            r2_sum.scale = '0;
-            r2_sum.inf = '0;
-            r2_sum.zero = '1;
+            r2_sum.sgn <= '0;
+            r2_sum.scale <= '0;
+            r2_sum.fraction <= '0;
+            r2_sum.inf <= '0;
+            r2_sum.zero <= '1;
 
             r2_fraction_sum_raw <= '0;
             r2_shift_amount_hiddenbit_out <= '0;
@@ -430,6 +451,7 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
 
             r2_sum.sgn <= r2a_sum.sgn;
             r2_sum.scale <= r2a_sum.scale;
+            r2_sum.fraction <= '0;
             r2_sum.inf <= r2a_sum.inf;
             r2_sum.zero <= r2a_sum.zero;
 
@@ -449,7 +471,7 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
         .c(r2_fraction_sum_normalized)
     );
 
-    assign r2_sum.fraction = r2_fraction_sum_normalized[ABITS_ACCUM:(ABITS_ACCUM-FBITS_ACCUM+1)];
+    assign r2_trunc_frac = r2_fraction_sum_normalized[ABITS_ACCUM:(ABITS_ACCUM-FBITS_ACCUM+1)];
 
 
     //   ___     ___
@@ -467,16 +489,21 @@ module positaccum_16_raw (clk, rst, in1, start, result, done);
         begin
             r99_start <= '0;
 
-            r99_sum.sgn = '0;
-            r99_sum.scale = '0;
-            r99_sum.fraction = '0;
-            r99_sum.inf = '0;
-            r99_sum.zero = '1;
+            r99_sum.sgn <= '0;
+            r99_sum.scale <= '0;
+            r99_sum.fraction <= '0;
+            r99_sum.inf <= '0;
+            r99_sum.zero <= '1;
         end
         else
         begin
             r99_start <= r2_start;
-            r99_sum <= r2_sum;
+
+            r99_sum.sgn <= r2_sum.sgn;
+            r99_sum.scale <= r2_sum.scale;
+            r99_sum.fraction <= r2_trunc_frac;
+            r99_sum.inf <= r2_sum.inf;
+            r99_sum.zero <= r2_sum.zero;
         end
     end
 

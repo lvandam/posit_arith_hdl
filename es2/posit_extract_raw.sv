@@ -15,7 +15,7 @@ module posit_extract_raw (in1, absolute, result);
     logic [7:0] regime_scale;
     logic [4:0] regime_u, k0, k1;
     logic [NBITS-1:0] exp_fraction_u;
-    logic [4:0] regime_width;
+    logic [5:0] regime_width;
     logic [31:0] in_u;
 
     // Check if part without sign is non-zero (to determine inf and zero cases)
@@ -58,7 +58,7 @@ module posit_extract_raw (in1, absolute, result);
     // Shift away the regime resulting in only the exponent and fraction
     shift_left #(
         .N(32),
-        .S(5)
+        .S(6)
     ) ls (
         .a({in_u[NBITS-3:0], 2'b0}),
         .b(regime_width),
